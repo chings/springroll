@@ -1,0 +1,1 @@
+Spring rolls are a large variety of filled, rolled appetizers or dim sum found in East Asian, Southeast Asian cuisine and South Asian cuisine. The name is a literal translation of the Chinese chūn juǎn (春卷 'spring roll'). The kind of wrapper, fillings, and cooking technique used, as well as the name, vary considerably within this large area, depending on the region's culture.
