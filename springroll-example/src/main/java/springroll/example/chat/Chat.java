@@ -12,9 +12,11 @@ public class Chat {
 
     public void on(Join request) {
         if(chatters.containsKey(request.name)) return;
-        chatters.forEach((key, value) -> { value.tell(new SomeoneJoined(request.name)); });
         chatters.put(request.name, request.from);
         request.from.tell(new Joined(chatters.keySet()));
+        chatters.forEach((key, value) -> {
+            if(!key.equals(request.name)) value.tell(new SomeoneJoined(request.name));
+        });
     }
 
     public void on(Say request) {
