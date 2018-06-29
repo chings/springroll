@@ -1,22 +1,14 @@
 package springroll.example;
 
-import akka.actor.ActorRef;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import springroll.example.model.Mora;
-import springroll.example.model.MoraMaster;
-import springroll.framework.annotation.ActorReference;
+import org.springframework.context.ApplicationContext;
 
 @SpringBootApplication
 public class ServerApplication {
 
-    @ActorReference
-    MoraMaster moraMaster;
-
-    @ActorReference(Mora.class)
-    ActorRef ref;
-
     public static void main(String[] args) {
-
+        ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
     }
 
 }
