@@ -1,14 +1,17 @@
 package springroll.example.chat;
 
-import akka.typed.ActorRef;
 
-public class Join implements ChatRequest {
+import akka.actor.ActorRef;
 
-    String name;
-    ActorRef<ChatResponse> from;
+import java.io.Serializable;
 
-    public Join(String name, ActorRef<ChatResponse> from) {
-        this.name = name;
+public class Join implements Serializable {
+
+    String doerName;
+    ActorRef from;
+
+    public Join(String doerName, ActorRef from) {
+        this.doerName = doerName;
         this.from = from;
     }
 

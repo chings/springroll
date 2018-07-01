@@ -1,11 +1,13 @@
 package springroll.example.chat;
 
-public class Leave implements ChatRequest {
+import java.io.Serializable;
 
-    String name;
+public class Leave implements Serializable {
 
-    public Leave(String name) {
-        this.name = name;
+    String doerName;
+
+    public Leave(String doerName) {
+        this.doerName = doerName;
     }
 
 }

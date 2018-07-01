@@ -1,13 +1,15 @@
 package springroll.example.chat;
 
-public class Say implements ChatRequest {
+import java.io.Serializable;
 
-    String name;
-    String message;
+public class Say implements Serializable {
 
-    public Say(String name, String message) {
-        this.name = name;
-        this.message = message;
+    String doerName;
+    String content;
+
+    public Say(String doerName, String content) {
+        this.doerName = doerName;
+        this.content = content;
     }
 
 }

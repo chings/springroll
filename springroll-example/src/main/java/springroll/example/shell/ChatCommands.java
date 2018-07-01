@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 public class ChatCommands {
     private static Logger log = LoggerFactory.getLogger(ChatCommands.class);
 
-    @ShellMethod("Join a/the Chat")
+    @ShellMethod("Join a/the ChatActor0")
     public void join(String memberId, @ShellOption(defaultValue = "") String channelId) {
         if(StringUtils.hasText(channelId)) {
             log.info("Joining the chat '{}'", channelId);
