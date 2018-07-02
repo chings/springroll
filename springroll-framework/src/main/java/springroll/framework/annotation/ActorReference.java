@@ -8,6 +8,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface ActorReference {
 
-    Class<?> value() default Object.class;
+    Class<?> value();
 
 }

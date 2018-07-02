@@ -4,11 +4,33 @@ import java.io.Serializable;
 
 public class Say implements Serializable {
 
-    String doerName;
+    String senderName;
     String content;
 
-    public Say(String doerName, String content) {
-        this.doerName = doerName;
+    public Say() { }
+
+    public Say(String content) {
+        this.content = content;
+    }
+
+    public Say(String senderName, String content) {
+        this.senderName = senderName;
+        this.content = content;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
         this.content = content;
     }
 

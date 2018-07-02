@@ -3,11 +3,11 @@ package springroll.framework.annotation;
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 @Inherited
 @Documented
-public @interface ActorComponent {
+public @interface ActorBean {
 
-    String value();
+    Class<?> value();
 
 }

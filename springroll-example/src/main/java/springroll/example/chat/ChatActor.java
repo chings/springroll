@@ -1,39 +1,37 @@
 package springroll.example.chat;
 
 import akka.actor.ActorRef;
-import springroll.framework.AdaptiveActor;
-import springroll.framework.annotation.ActorComponent;
+import springroll.framework.GenericActor;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ActorComponent("chat")
-public class ChatActor extends AdaptiveActor {
+public class ChatActor extends GenericActor {
 
     Map<String, ActorRef> chatters = new HashMap<>();
 
     public void on(Join join) {
-        if(chatters.containsKey(join.doerName)) return;
-        chatters.put(join.doerName, join.from);
+        if(chatters.containsKey(join.senderName)) return;
+        chatters.put(join.senderName, join.from);
         chatters.forEach((name, ref) -> {
-            ChatterJoined message = new ChatterJoined(join.doerName);
-            if(message.equals(join.doerName)) message.setCurrentChatters(chatters.keySet());
-            notify(ref, message);
+            ChatterJoined message = new ChatterJoined(join.senderName);
+            if(message.equals(join.senderName)) message.setCurrentChatterNames(chatters.keySet());
+            tell(ref, message);
         });
     }
 
     public void on(Say say) {
-        if(!chatters.containsKey(say.doerName)) return;
+        if(!chatters.containsKey(say.senderName)) return;
         chatters.forEach((name, ref) -> {
-            notify(ref, new ChatterSaid(say.doerName, say.content));
+            tell(ref, new ChatterSaid(say.senderName, say.content));
         });
     }
 
     public void on(Leave leave) {
-        if(!chatters.containsKey(leave.doerName)) return;
-        chatters.remove(leave.doerName);
+        if(!chatters.containsKey(leave.senderName)) return;
+        chatters.remove(leave.senderName);
         chatters.forEach((name, ref) -> {
-            notify(ref, new ChatterLeft(leave.doerName));
+            tell(ref, new ChatterLeft(leave.senderName));
         });
     }
 
