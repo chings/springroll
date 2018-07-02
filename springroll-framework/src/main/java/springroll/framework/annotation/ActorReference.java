@@ -1,5 +1,7 @@
 package springroll.framework.annotation;
 
+import akka.actor.Actor;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -8,6 +10,8 @@ import java.lang.annotation.*;
 @Documented
 public @interface ActorReference {
 
-    Class<?> value();
+    Class<? extends Actor> value() default Actor.class;
+
+    String path() default "";
 
 }

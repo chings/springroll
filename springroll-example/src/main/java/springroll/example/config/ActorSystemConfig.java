@@ -1,43 +1,35 @@
 package springroll.example.config;
 
 import akka.actor.ActorSystem;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
+import springroll.framework.core.ActorBeanPostProcessor;
+import springroll.framework.core.ActorReferencePostProcessor;
+import springroll.framework.core.ActorRegistry;
 
 @Configuration
 public class ActorSystemConfig {
 
     @Bean
-    public Config akkaConfiguration() {
-        return ConfigFactory.load();
-    }
-
-    @Value("${akka.system.name}")
-    String name;
-
-    @Bean
-    public ActorSystem actorSystem(Config config) {
-        ActorSystem system = ActorSystem.create(name, config);
-        return system;
+    public ActorSystem actorSystem() {
+        return ActorSystem.create();
     }
 
     @Bean
-    public BeanPostProcessor BeanPostProcessor() {
-        return new BeanPostProcessor() {
-            @Override
-            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-                return null;
-            }
-        };
+    public ActorRegistry actorRegistry() {
+        return new ActorRegistry(actorSystem());
+    }
+
+    @Bean
+    public BeanPostProcessor ActorBeanPostProcessor() {
+        return new ActorBeanPostProcessor(actorSystem(), actorRegistry());
+    }
+
+    @Bean
+    public BeanPostProcessor ActorReferencePostProcessor() {
+        return new ActorReferencePostProcessor(actorRegistry());
     }
 
 }

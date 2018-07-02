@@ -1,6 +1,6 @@
 <configuration>
 
-  <appender who="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%date{ISO8601} %-5level %X{akkaSource} - %msg%n</pattern>
     </encoder>
@@ -10,6 +10,6 @@
     <appender-ref ref="STDOUT" />
   </root>
 
-  <logger who="de.kimrudolph.akkaflow" level="DEBUG" />
+  <logger name="springroll" level="DEBUG" />
 
 </configuration>

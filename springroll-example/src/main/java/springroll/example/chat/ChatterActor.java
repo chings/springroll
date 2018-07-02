@@ -1,11 +1,10 @@
-package springroll.example.shell;
+package springroll.example.chat;
 
 import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-import springroll.example.chat.*;
-import springroll.framework.GenericActor;
+import springroll.framework.core.GenericActor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +24,7 @@ public class ChatterActor extends GenericActor {
 
     public void on(Join join) {
         join.setSenderName(name);
+        join.setFrom(this.getSelf());
         tell(chat, join);
     }
 
@@ -40,6 +40,7 @@ public class ChatterActor extends GenericActor {
     public void on(Leave leave) {
         leave.setSenderName(name);
         tell(chat, leave);
+        terminate();
     }
 
     public void on(ChatterLeft chatterLeft) {

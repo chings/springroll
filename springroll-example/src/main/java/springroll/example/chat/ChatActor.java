@@ -1,7 +1,7 @@
 package springroll.example.chat;
 
 import akka.actor.ActorRef;
-import springroll.framework.GenericActor;
+import springroll.framework.core.GenericActor;
 
 import java.util.HashMap;
 import java.util.Map;
