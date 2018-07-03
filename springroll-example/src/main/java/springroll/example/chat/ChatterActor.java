@@ -18,13 +18,17 @@ public class ChatterActor extends GenericActor {
     public static final String CHATTING = "chatting";
 
     ActorRef chat;
-    String name;
-    List<String> coChatterNames;
 
-    public ChatterActor(ActorRef chat, String name) {
+    String name;
+    List<String> coChatterNames = new ArrayList<>();
+
+    public ChatterActor(ActorRef chat) {
         this.chat = chat;
-        this.name = name;
-        this.coChatterNames = new ArrayList<>();
+    }
+
+    @State(BEGINNING)
+    public void on(ChangeName changeName) {
+        this.name = changeName.getNewName();
     }
 
     @State(BEGINNING)
@@ -50,7 +54,7 @@ public class ChatterActor extends GenericActor {
     public void on(Leave leave) {
         leave.setSenderName(name);
         tell(chat, leave);
-        terminate();
+        become(BEGINNING);
     }
 
     @State(CHATTING)

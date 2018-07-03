@@ -7,8 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 import springroll.example.chat.*;
 import springroll.framework.annotation.ActorReference;
+
+import javax.annotation.PostConstruct;
 
 import static springroll.framework.core.Actors.spawn;
 import static springroll.framework.core.Actors.tell;
@@ -17,7 +20,7 @@ import static springroll.framework.core.Actors.tell;
 public class ChatCommands {
     private static Logger log = LoggerFactory.getLogger(ChatCommands.class);
 
-    ActorRef chatter;
+    public static final String DEFAULT_NAME = "Anonymous";
 
     @Autowired
     ActorSystem actorSystem;
@@ -25,9 +28,16 @@ public class ChatCommands {
     @ActorReference(ChatActor.class)
     ActorRef chat;
 
+    ActorRef chatter;
+
+    @PostConstruct
+    public void init() {
+        chatter = spawn(actorSystem, ChatterActor.class, chat);
+    }
+
     @ShellMethod("Join the chat")
-    public void join(String name) {
-        chatter = spawn(actorSystem, ChatterActor.class, chat, name);
+    public void join(@ShellOption(defaultValue = DEFAULT_NAME) String name) {
+        tell(chatter, new ChangeName(name));
         tell(chatter, new Join());
     }
 
