@@ -8,6 +8,9 @@ import java.lang.annotation.*;
 @Documented
 public @interface State {
 
-    String value() default "";
+    String BEGINNING = "";
+    String ALL = "*";
+
+    String[] value() default "";
 
 }

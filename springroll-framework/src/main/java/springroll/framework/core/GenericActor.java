@@ -11,6 +11,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import static springroll.framework.annotation.State.ALL;
+import static springroll.framework.annotation.State.BEGINNING;
+
 public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
 
@@ -25,14 +28,16 @@ public class GenericActor extends AbstractActor {
             Class<?>[] paramTypes = method.getParameterTypes();
             if(paramTypes.length != 1) continue;
             State state = method.getAnnotation(State.class);
-            String stateKey = state != null ? state.value() : "";
-            Map<Class, Method> stateBehaviors = result.get(stateKey);
-            if(stateBehaviors == null) {
-                stateBehaviors = new HashMap<>();
-                result.put(stateKey, stateBehaviors);
+            String[] stateKeys = state != null ? state.value() : new String[] { BEGINNING };
+            for(String stateKey : stateKeys) {
+                Map<Class, Method> stateBehaviors = result.get(stateKey);
+                if(stateBehaviors == null) {
+                    stateBehaviors = new HashMap<>();
+                    result.put(stateKey, stateBehaviors);
+                }
+                if(!method.isAccessible()) method.setAccessible(true);
+                stateBehaviors.put(paramTypes[0], method);
             }
-            if(!method.isAccessible()) method.setAccessible(true);
-            stateBehaviors.put(paramTypes[0], method);
         }
         behaviorsCache.put(actorClass, result);
         return result;
@@ -42,23 +47,33 @@ public class GenericActor extends AbstractActor {
 
     @Override
     public AbstractActor.Receive createReceive() {
-        return stateReceive("");
+        return stateReceive(BEGINNING);
     }
 
     public Receive stateReceive(String state) {
-        Map<Class, Method> stateBehaviors = allStateBehaviors.get(state);
-        if(stateBehaviors == null) {
+        Map<Class, Method> stateBehaviors = new HashMap<>();
+        Map<Class, Method> behaviors = allStateBehaviors.get(ALL);
+        if(behaviors != null) stateBehaviors.putAll(behaviors);
+        behaviors = allStateBehaviors.get(state);
+        if(behaviors != null) stateBehaviors.putAll(behaviors);
+        if(stateBehaviors.isEmpty()) {
             log.warn("empty stateBehaviors, should terminate");
             terminate();
             return null;
         }
         ReceiveBuilder receiveBuilder = receiveBuilder();
         for(Map.Entry<Class, Method> stateBehavior : stateBehaviors.entrySet()) {
-            receiveBuilder.match(stateBehavior.getKey(), (arg) -> {
+            receiveBuilder.match(stateBehavior.getKey(), arg -> {
                 Object result = stateBehavior.getValue().invoke(this, arg);
+                if(result == null) return;
+                if(result instanceof String) {
+                    become((String)result);
+                    return;
+                }
                 if(Boolean.FALSE.equals(result)) terminate();
             });
         }
+        receiveBuilder.matchAny(arg -> log.warn("unrecognized: {}", arg));
         return receiveBuilder.build();
     }
 

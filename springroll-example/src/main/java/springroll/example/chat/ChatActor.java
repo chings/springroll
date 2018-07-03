@@ -15,7 +15,7 @@ public class ChatActor extends GenericActor {
         chatters.put(join.senderName, join.from);
         chatters.forEach((name, ref) -> {
             ChatterJoined message = new ChatterJoined(join.senderName);
-            if(message.equals(join.senderName)) message.setCurrentChatterNames(chatters.keySet());
+            if(name.equals(join.senderName)) message.setCurrentChatterNames(chatters.keySet());
             tell(ref, message);
         });
     }
