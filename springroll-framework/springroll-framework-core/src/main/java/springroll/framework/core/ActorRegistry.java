@@ -1,6 +1,5 @@
 package springroll.framework.core;
 
-import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
@@ -11,19 +10,19 @@ public class ActorRegistry {
 
     ActorSystem actorSystem;
 
-    Map<Class<? extends Actor>, ActorRef> localRefsByClass = new HashMap<>();
+    Map<String, ActorRef> localRefsByPath = new HashMap<>();
 
     public ActorRegistry(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
     }
 
-    public synchronized void register(ActorRef ref, Class<? extends Actor> actorClass, String name) {
-        localRefsByClass.put(actorClass, ref);
+    public synchronized void register(ActorRef ref) {
+        localRefsByPath.put(ref.path().toString(), ref);
         //TODO: expose to coordinator
     }
 
-    public synchronized ActorRef findByClass(Class<?> actorClass) {
-        return localRefsByClass.get(actorClass);
+    public ActorRef find(String actorPath) {
+        return localRefsByPath.get(actorPath);
     }
 
 }

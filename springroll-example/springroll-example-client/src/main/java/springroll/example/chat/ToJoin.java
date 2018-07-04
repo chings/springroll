@@ -1,4 +1,4 @@
-package springroll.example.client.shell;
+package springroll.example.chat;
 
 import akka.actor.ActorSelection;
 

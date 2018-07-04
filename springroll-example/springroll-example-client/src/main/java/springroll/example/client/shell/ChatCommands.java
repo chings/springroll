@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
+import springroll.example.chat.ChatterActor;
 import springroll.example.chat.Leave;
 import springroll.example.chat.Say;
+import springroll.example.chat.ToJoin;
 
 import javax.annotation.PostConstruct;
 

@@ -14,7 +14,7 @@
     <modules>
         <module>springroll-example-server</module>
         <module>springroll-example-client</module>
-        <module>springroll-example-app</module>
+        <module>springroll-example-model</module>
     </modules>
 
     <profiles>

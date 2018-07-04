@@ -1,10 +1,9 @@
-package springroll.example.client.shell;
+package springroll.example.chat;
 
 import akka.actor.ActorSelection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-import springroll.example.chat.*;
 import springroll.framework.annotation.State;
 import springroll.framework.core.GenericActor;
 
@@ -28,45 +27,45 @@ public class ChatterActor extends GenericActor {
         chat = toJoin.chat;
         name = toJoin.name;
         Join join = new Join();
-        join.setSenderName(name);
-        join.setFrom(this.getSelf());
+        join.senderName = name;
+        join.from = this.getSelf();
         tell(chat, join);
     }
 
     @State({ BEGINNING, CHATTING })
     public void on(ChatterJoined chatterJoined) {
-        if(CollectionUtils.isEmpty(chatterJoined.getCurrentChatterNames())) {
-            coChatterNames.add(chatterJoined.getNewChatterName());
+        if(CollectionUtils.isEmpty(chatterJoined.currentChatterNames)) {
+            coChatterNames.add(chatterJoined.newChatterName);
         } else {
             coChatterNames.clear();
-            coChatterNames.addAll(chatterJoined.getCurrentChatterNames());
+            coChatterNames.addAll(chatterJoined.currentChatterNames);
             become(CHATTING);
         }
-        log.debug("{} Joined：{}", chatterJoined.getNewChatterName(), coChatterNames);
+        log.debug("{} Joined：{}", chatterJoined.newChatterName, coChatterNames);
     }
 
     @State(CHATTING)
     public void on(Leave leave) {
-        leave.setSenderName(name);
+        leave.senderName = name;
         tell(chat, leave);
         become(BEGINNING);
     }
 
     @State(CHATTING)
     public void on(ChatterLeft chatterLeft) {
-        coChatterNames.remove(chatterLeft.getChatterName());
-        log.debug("{} Left：{}", chatterLeft.getChatterName(), coChatterNames);
+        coChatterNames.remove(chatterLeft.chatterName);
+        log.debug("{} Left：{}", chatterLeft.chatterName, coChatterNames);
     }
 
     @State(CHATTING)
     public void on(Say say) {
-        say.setSenderName(name);
+        say.senderName = name;
         tell(chat, say);
     }
 
     @State(CHATTING)
     public void on(ChatterSaid chatterSaid) {
-        log.info("{} Said：{}", chatterSaid.getChatterName(), chatterSaid.getContent());
+        log.info("{} Said：{}", chatterSaid.chatterName, chatterSaid.content);
     }
 
 }
