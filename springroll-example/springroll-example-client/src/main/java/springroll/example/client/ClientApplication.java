@@ -18,16 +18,11 @@ public class ClientApplication {
 
     @Bean
     public PromptProvider promptProvider() {
-        return new PromptProvider() {
-            @Override
-            public AttributedString getPrompt() {
-                return new AttributedString(applicationName + ">");
-            }
-        };
+        return () -> new AttributedString(applicationName + ">");
     }
 
     public static void main(String[] args) {
-        ApplicationContext context = SpringApplication.run(ClientApplication.class, args);
+        SpringApplication.run(ClientApplication.class, args);
     }
 
 }

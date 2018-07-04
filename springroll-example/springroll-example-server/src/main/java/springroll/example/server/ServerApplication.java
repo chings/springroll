@@ -29,12 +29,7 @@ public class ServerApplication {
 
     @Bean
     public PromptProvider promptProvider() {
-        return new PromptProvider() {
-            @Override
-            public AttributedString getPrompt() {
-                return new AttributedString(applicationName + ">");
-            }
-        };
+        return () -> new AttributedString(applicationName + ">");
     }
 
     @PostConstruct
@@ -43,7 +38,7 @@ public class ServerApplication {
     }
 
     public static void main(String[] args) {
-        ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
+        SpringApplication.run(ServerApplication.class, args);
     }
 
 }
