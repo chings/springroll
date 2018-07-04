@@ -1,6 +1,8 @@
 package springroll.framework.core;
 
 import akka.actor.ActorRef;
+import akka.actor.LocalActorRef;
+import akka.actor.RepointableActorRef;
 import akka.serialization.Serialization;
 import akka.serialization.SerializerWithStringManifest;
 import com.alibaba.fastjson.JSON;
@@ -31,33 +33,16 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
         return o.getClass().getCanonicalName();
     }
 
+    ObjectSerializer actorRefSerializer = new ObjectSerializer() {
+        @Override
+        public void write(JSONSerializer jsonSerializer, Object theActorRef, Object o1, Type type, int i) throws IOException {
+            jsonSerializer.write(Serialization.serializedActorPath((ActorRef)theActorRef));
+        }
+    };
+
     SerializeConfig serializeConfig = new SerializeConfig() {{
-        put(ActorRef.class, new ObjectSerializer() {
-
-            @Override
-            public void write(JSONSerializer jsonSerializer, Object theActorRef, Object o1, Type type, int i) throws IOException {
-                jsonSerializer.write(Serialization.serializedActorPath((ActorRef)theActorRef));
-            }
-
-        });
-    }};
-
-    ParserConfig parserConfig = new ParserConfig() {{
-        putDeserializer(ActorRef.class, new ObjectDeserializer() {
-
-            @Override
-            public <T> T deserialze(DefaultJSONParser defaultJSONParser, Type type, Object theActorRef) {
-                //TODO: return extendedSystem.provider().resolveActorRef(dentifier);
-                // https://doc.akka.io/docs/akka/2.5.4/java/serialization.html#customization
-                return null;
-            }
-
-            @Override
-            public int getFastMatchToken() {
-                return 0;
-            }
-
-        });
+        put(LocalActorRef.class, actorRefSerializer);
+        put(RepointableActorRef.class, actorRefSerializer);
     }};
 
     @Override
@@ -69,10 +54,29 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
         }
     }
 
+    ObjectDeserializer actorRefDeserializer = new ObjectDeserializer() {
+        @Override
+        public <T> T deserialze(DefaultJSONParser defaultJSONParser, Type type, Object theActorRef) {
+            //TODO: return extendedSystem.provider().resolveActorRef(dentifier);
+            // https://doc.akka.io/docs/akka/2.5.4/java/serialization.html#customization
+            return null;
+        }
+
+        @Override
+        public int getFastMatchToken() {
+            return 0;
+        }
+    };
+
+    ParserConfig parserConfig = new ParserConfig() {{
+        putDeserializer(LocalActorRef.class, actorRefDeserializer);
+        putDeserializer(RepointableActorRef.class, actorRefDeserializer);
+    }};
+
     @Override
     public Object fromBinary(byte[] bytes, String manifest) throws NotSerializableException {
         try {
-            return JSON.parseObject(new String(bytes, ENCODING), Class.forName(manifest));
+            return JSON.parseObject(new String(bytes, ENCODING), Class.forName(manifest), parserConfig);
         } catch (ClassNotFoundException x) {
             throw new NotSerializableException(x.getMessage());
         } catch (UnsupportedEncodingException x) {
