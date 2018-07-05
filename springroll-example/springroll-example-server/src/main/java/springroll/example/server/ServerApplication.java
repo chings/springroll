@@ -10,12 +10,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.shell.jline.PromptProvider;
 import springroll.example.chat.ChatActor;
-import springroll.framework.annotation.ActorBean;
-import springroll.framework.annotation.EnableActorSystem;
-
-import javax.annotation.PostConstruct;
+import springroll.framework.coordinator.annotation.EnableRedisCoordinator;
+import springroll.framework.core.annotation.ActorBean;
+import springroll.framework.core.annotation.EnableActorSystem;
 
 @SpringBootApplication
+@EnableRedisCoordinator
 @EnableActorSystem
 public class ServerApplication {
     private static Logger log = LoggerFactory.getLogger(ServerApplication.class);
@@ -29,11 +29,6 @@ public class ServerApplication {
     @Bean
     public PromptProvider promptProvider() {
         return () -> new AttributedString(applicationName + ">");
-    }
-
-    @PostConstruct
-    public void init() {
-        log.info(chat.toString());
     }
 
     public static void main(String[] args) {

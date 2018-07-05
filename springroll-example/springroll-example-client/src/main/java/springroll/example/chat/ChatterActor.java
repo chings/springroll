@@ -4,13 +4,13 @@ import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-import springroll.framework.annotation.State;
 import springroll.framework.core.GenericActor;
+import springroll.framework.core.annotation.State;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static springroll.framework.annotation.State.BEGINNING;
+import static springroll.framework.core.annotation.State.BEGINNING;
 
 
 public class ChatterActor extends GenericActor {

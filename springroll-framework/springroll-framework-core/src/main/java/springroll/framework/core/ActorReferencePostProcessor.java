@@ -10,7 +10,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.util.ReflectionUtils;
-import springroll.framework.annotation.ActorReference;
+import springroll.framework.core.annotation.ActorReference;
 
 public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
     private static Logger log = LoggerFactory.getLogger(ActorReferencePostProcessor.class);
@@ -26,12 +26,12 @@ public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
         ReflectionUtils.doWithFields(bean.getClass(), field -> {
             ActorReference actorReference = field.getAnnotation(ActorReference.class);
             if(actorReference == null) return;
-            if(!field.getType().isAssignableFrom(ActorSelection.class) || !field.getType().isAssignableFrom(ActorRef.class))
+            if(!field.getType().isAssignableFrom(ActorSelection.class) && !field.getType().isAssignableFrom(ActorRef.class))
                 throw new NotWritablePropertyException(bean.getClass(), field.getName(), "only ActorSelection/ActorRef can be injected by @ActorReference");
-            String actorPath = actorReference.value();
-            if(!actorPath.startsWith("/user")) actorPath += actorPath.startsWith("/") ? "/user" + actorPath : "/user/" + actorPath;
-            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(actorPath) : actorRegistry.get(actorPath);
-            if(value == null) throw new NoSuchBeanDefinitionException(actorPath);
+            String shortPath = actorReference.value();
+            if(!shortPath.startsWith("/user")) shortPath = shortPath.startsWith("/") ? "/user" + shortPath : "/user/" + shortPath;
+            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(shortPath) : actorRegistry.get(shortPath);
+            if(value == null) throw new NoSuchBeanDefinitionException(shortPath);
             if(!field.isAccessible()) field.setAccessible(true);
             field.set(bean, value);
         });

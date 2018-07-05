@@ -1,7 +1,7 @@
-package springroll.framework.annotation;
+package springroll.framework.core.annotation;
 
 import org.springframework.context.annotation.Import;
-import springroll.framework.config.ActorSystemConfig;
+import springroll.framework.core.config.ActorSystemConfig;
 
 import java.lang.annotation.*;
 

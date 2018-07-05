@@ -6,7 +6,7 @@ import akka.actor.ActorSelection;
 import akka.japi.pf.ReceiveBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import springroll.framework.annotation.State;
+import springroll.framework.core.annotation.State;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

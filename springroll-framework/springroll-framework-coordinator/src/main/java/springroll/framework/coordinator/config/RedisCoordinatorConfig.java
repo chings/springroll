@@ -1,4 +1,4 @@
-package springroll.framework.coordinator;
+package springroll.framework.coordinator.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
+import springroll.framework.coordinator.RedisCoordinator;
 import springroll.framework.core.Coordinator;
 
 import java.util.*;

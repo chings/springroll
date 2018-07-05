@@ -1,4 +1,4 @@
-package springroll.framework.annotation;
+package springroll.framework.core.annotation;
 
 import java.lang.annotation.*;
 

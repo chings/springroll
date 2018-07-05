@@ -1,4 +1,4 @@
-package springroll.framework.config;
+package springroll.framework.core.config;
 
 import akka.actor.ActorSystem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ public class ActorSystemConfig {
     }
 
     @Autowired(required = false)
-    CoordinatedActorRegistry.Coordinator coordinator;
+    Coordinator coordinator;
 
     @Bean
     public ActorRegistry actorRegistry() {

@@ -15,7 +15,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
-import springroll.framework.annotation.ActorBean;
+import springroll.framework.core.annotation.ActorBean;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

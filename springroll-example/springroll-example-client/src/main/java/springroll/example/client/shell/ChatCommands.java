@@ -12,7 +12,7 @@ import springroll.example.chat.ChatterActor;
 import springroll.example.chat.Leave;
 import springroll.example.chat.Say;
 import springroll.example.chat.ToJoin;
-import springroll.framework.annotation.ActorReference;
+import springroll.framework.core.annotation.ActorReference;
 
 import static springroll.framework.core.Actors.spawn;
 import static springroll.framework.core.Actors.tell;

@@ -15,8 +15,12 @@ import java.util.function.Function;
 
 public class CoordinatedActorRegistry extends LocalActorRegistry implements DisposableBean {
 
+    String myHost;
+
     public CoordinatedActorRegistry(ActorSystem actorSystem) {
         super(actorSystem);
+        String rootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
+        myHost = rootPath.substring(0, rootPath.length() - 1);
     }
 
     Map<String, Map<String, Registration>> remoteActors = null;
@@ -34,16 +38,16 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         }
     }
 
-    public static String[] splite(String fullActorPath) {
+    public static String[] split(String fullActorPath) {
         int n = 0;
         for(int i = 0; i < 3; i++) {
-            n = fullActorPath.indexOf('/', n);
+            n = fullActorPath.indexOf('/', n + 1);
         }
         return new String[] { fullActorPath.substring(0, n), fullActorPath.substring(n) };
     }
 
     public synchronized void onProvide(String actorPath) {
-        String[] tuple = splite(actorPath);
+        String[] tuple = split(actorPath);
         String host = tuple[0], shortPath = tuple[1];
         Map<String, Registration> registrations = remoteActors.get(host);
         if(registrations == null) {
@@ -54,7 +58,7 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
     }
 
     public synchronized void onUnProvide(String actorPath) {
-        String[] tuple = splite(actorPath);
+        String[] tuple = split(actorPath);
         String host = tuple[0], shortPath = tuple[1];
         Map<String, Registration> registrations = remoteActors.get(host);
         if(registrations != null) {
@@ -80,11 +84,9 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
     }
 
     public CoordinatedActorRegistry(ActorSystem actorSystem, Coordinator coordinator) {
-        super(actorSystem);
+        this(actorSystem);
         setCoordinator(coordinator);
     }
-
-    String myHost = Serialization.getCurrentTransportInformation().toString();
 
     @Override
     public synchronized void register(ActorRef ref) {

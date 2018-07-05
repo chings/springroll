@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static springroll.framework.core.CoordinatedActorRegistry.splite;
+import static springroll.framework.core.CoordinatedActorRegistry.split;
 
 public class RedisCoordinator implements Coordinator, MessageListener {
 
@@ -54,7 +54,7 @@ public class RedisCoordinator implements Coordinator, MessageListener {
 
     @Override
     public void provide(String actorPath) {
-        String[] tuple = splite(actorPath);
+        String[] tuple = split(actorPath);
         String host = tuple[0], shortPath = tuple[1];
         redisTemplate.opsForSet().add(key(), host);
         redisTemplate.opsForSet().add(key(host), shortPath);
@@ -63,7 +63,7 @@ public class RedisCoordinator implements Coordinator, MessageListener {
 
     @Override
     public void unprovide(String actorPath) {
-        String[] tuple = splite(actorPath);
+        String[] tuple = split(actorPath);
         String host = tuple[0], shortPath = tuple[1];
         redisTemplate.opsForSet().remove(key(host), shortPath);
         if(redisTemplate.opsForSet().size(key(host)) == 0) {
