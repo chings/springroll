@@ -5,12 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import springroll.framework.core.GenericActor;
-import springroll.framework.core.annotation.State;
+import springroll.framework.core.annotation.At;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static springroll.framework.core.annotation.State.BEGINNING;
+import static springroll.framework.core.annotation.At.BEGINNING;
 
 
 public class ChatterActor extends GenericActor {
@@ -22,7 +22,7 @@ public class ChatterActor extends GenericActor {
     String name;
     List<String> coChatterNames = new ArrayList<>();
 
-    @State(BEGINNING)
+    @At(BEGINNING)
     public void on(ToJoin toJoin) {
         chat = toJoin.chat;
         name = toJoin.name;
@@ -32,7 +32,7 @@ public class ChatterActor extends GenericActor {
         tell(chat, join);
     }
 
-    @State({ BEGINNING, CHATTING })
+    @At({ BEGINNING, CHATTING })
     public void on(ChatterJoined chatterJoined) {
         if(CollectionUtils.isEmpty(chatterJoined.currentChatterNames)) {
             coChatterNames.add(chatterJoined.newChatterName);
@@ -44,26 +44,26 @@ public class ChatterActor extends GenericActor {
         log.debug("{} Joined：{}", chatterJoined.newChatterName, coChatterNames);
     }
 
-    @State(CHATTING)
+    @At(CHATTING)
     public void on(Leave leave) {
         leave.senderName = name;
         tell(chat, leave);
         terminate();
     }
 
-    @State(CHATTING)
+    @At(CHATTING)
     public void on(ChatterLeft chatterLeft) {
         coChatterNames.remove(chatterLeft.chatterName);
         log.debug("{} Left：{}", chatterLeft.chatterName, coChatterNames);
     }
 
-    @State(CHATTING)
+    @At(CHATTING)
     public void on(Say say) {
         say.senderName = name;
         tell(chat, say);
     }
 
-    @State(CHATTING)
+    @At(CHATTING)
     public void on(ChatterSaid chatterSaid) {
         log.info("{} Said：{}", chatterSaid.chatterName, chatterSaid.content);
     }

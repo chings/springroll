@@ -6,11 +6,8 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Inherited
 @Documented
-public @interface State {
+public @interface On {
 
-    String BEGINNING = "";
-    String ALL = "*";
-
-    String[] value() default "";
+    Class<?> value() default Object.class;
 
 }
