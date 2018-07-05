@@ -1,6 +1,6 @@
 package springroll.example.chat;
 
-import akka.actor.ActorSelection;
+import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -18,7 +18,7 @@ public class ChatterActor extends GenericActor {
 
     public static final String CHATTING = "chatting";
 
-    ActorSelection chat;
+    ActorRef chat;
     String name;
     List<String> coChatterNames = new ArrayList<>();
 
@@ -48,7 +48,7 @@ public class ChatterActor extends GenericActor {
     public void on(Leave leave) {
         leave.senderName = name;
         tell(chat, leave);
-        become(BEGINNING);
+        terminate();
     }
 
     @State(CHATTING)

@@ -1,12 +1,11 @@
 package springroll.framework.config;
 
 import akka.actor.ActorSystem;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springroll.framework.core.ActorBeanPostProcessor;
-import springroll.framework.core.ActorReferencePostProcessor;
-import springroll.framework.core.ActorRegistry;
+import springroll.framework.core.*;
 
 @Configuration
 public class ActorSystemConfig {
@@ -16,9 +15,14 @@ public class ActorSystemConfig {
         return ActorSystem.create();
     }
 
+    @Autowired(required = false)
+    CoordinatedActorRegistry.Coordinator coordinator;
+
     @Bean
     public ActorRegistry actorRegistry() {
-        return new ActorRegistry(actorSystem());
+        return coordinator != null ?
+                new CoordinatedActorRegistry(actorSystem(), coordinator) :
+                new LocalActorRegistry(actorSystem());
     }
 
     @Bean

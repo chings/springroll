@@ -15,13 +15,13 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 
 public class FastJsonSerializer extends SerializerWithStringManifest {
 
     public static final int IDENTIFIER = 1199;
-    public static final String ENCODING = "UTF-8";
+    private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
     @Override
     public int identifier() {
@@ -41,17 +41,14 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
     };
 
     SerializeConfig serializeConfig = new SerializeConfig() {{
+        put(ActorRef.class, actorRefSerializer);
         put(LocalActorRef.class, actorRefSerializer);
         put(RepointableActorRef.class, actorRefSerializer);
     }};
 
     @Override
     public byte[] toBinary(Object o) {
-        try {
-            return JSON.toJSONString(o, serializeConfig).getBytes(ENCODING);
-        } catch (UnsupportedEncodingException x) {
-            return null;
-        }
+        return JSON.toJSONString(o, serializeConfig).getBytes(DEFAULT_CHARSET);
     }
 
     ObjectDeserializer actorRefDeserializer = new ObjectDeserializer() {
@@ -69,6 +66,7 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
     };
 
     ParserConfig parserConfig = new ParserConfig() {{
+        putDeserializer(ActorRef.class, actorRefDeserializer);
         putDeserializer(LocalActorRef.class, actorRefDeserializer);
         putDeserializer(RepointableActorRef.class, actorRefDeserializer);
     }};
@@ -76,11 +74,9 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
     @Override
     public Object fromBinary(byte[] bytes, String manifest) throws NotSerializableException {
         try {
-            return JSON.parseObject(new String(bytes, ENCODING), Class.forName(manifest), parserConfig);
+            return JSON.parseObject(new String(bytes, DEFAULT_CHARSET), Class.forName(manifest), parserConfig);
         } catch (ClassNotFoundException x) {
             throw new NotSerializableException(x.getMessage());
-        } catch (UnsupportedEncodingException x) {
-            return null;
         }
     }
 

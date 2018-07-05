@@ -1,26 +1,26 @@
 package springroll.example.chat;
 
-import akka.actor.ActorSelection;
+import akka.actor.ActorRef;
 
 import java.io.Serializable;
 
 public class ToJoin implements Serializable {
 
-    ActorSelection chat;
+    ActorRef chat;
     String name;
 
     public ToJoin() { }
 
-    public ToJoin(ActorSelection chat, String name) {
+    public ToJoin(ActorRef chat, String name) {
         this.chat = chat;
         this.name = name;
     }
 
-    public ActorSelection getChat() {
+    public ActorRef getChat() {
         return chat;
     }
 
-    public void setChat(ActorSelection chat) {
+    public void setChat(ActorRef chat) {
         this.chat = chat;
     }
 

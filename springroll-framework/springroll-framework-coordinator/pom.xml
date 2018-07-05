@@ -3,23 +3,23 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springroll</artifactId>
+        <artifactId>springroll-framework</artifactId>
         <groupId>cn.ching.springroll</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>springroll-framework</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>springroll-framework-core</module>
-        <module>springroll-framework-coordinator</module>
-    </modules>
+    <artifactId>springroll-framework-coordinator</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>cn.ching.springroll</groupId>
+            <artifactId>springroll-framework-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
     </dependencies>
 </project>
