@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springroll.framework.core.*;
 
+import javax.annotation.PreDestroy;
+
 @Configuration
 public class ActorSystemConfig {
 
@@ -33,6 +35,11 @@ public class ActorSystemConfig {
     @Bean
     public BeanPostProcessor ActorReferencePostProcessor() {
         return new ActorReferencePostProcessor(actorRegistry());
+    }
+
+    @PreDestroy
+    public void destroy() {
+        actorSystem().terminate();
     }
 
 }

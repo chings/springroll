@@ -67,7 +67,7 @@ public class RedisCoordinator implements Coordinator, MessageListener {
         String host = tuple[0], shortPath = tuple[1];
         redisTemplate.opsForSet().remove(key(host), shortPath);
         if(redisTemplate.opsForSet().size(key(host)) == 0) {
-            redisTemplate.delete(key(host));
+            //redisTemplate.delete(key(host));
             redisTemplate.opsForSet().remove(key(), host);
         }
         redisTemplate.convertAndSend(topic, event(UNPROVIDE, actorPath));

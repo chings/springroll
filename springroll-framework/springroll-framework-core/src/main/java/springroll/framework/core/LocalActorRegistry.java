@@ -26,6 +26,7 @@ public class LocalActorRegistry implements ActorRegistry {
         public Registration(String actorPath, ActorRef cachedActorRef) {
             this.cachedActorRef = cachedActorRef;
         }
+        @SuppressWarnings("deprecated")
         public ActorRef getActorRef() {
             if(cachedActorRef == null) cachedActorRef = actorSystem.actorFor(actorPath);
             return cachedActorRef;
