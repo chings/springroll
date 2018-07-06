@@ -16,7 +16,7 @@ public class LocalActorRegistry implements ActorRegistry {
         this.actorSystem = actorSystem;
     }
 
-    class Registration {
+    public class Registration {
         String actorPath;
         ActorRef cachedActorRef;
         ActorSelection cachedActorSelection;
@@ -24,6 +24,7 @@ public class LocalActorRegistry implements ActorRegistry {
             this.actorPath = actorPath;
         }
         public Registration(String actorPath, ActorRef cachedActorRef) {
+            this.actorPath = actorPath;
             this.cachedActorRef = cachedActorRef;
         }
         @SuppressWarnings("deprecated")
@@ -37,16 +38,16 @@ public class LocalActorRegistry implements ActorRegistry {
         }
     }
 
-    Map<String, Registration> localActors = new HashMap<>();
-
-    static String host(ActorPath actorPath) {
+    public static String host(ActorPath actorPath) {
         String rootPath = actorPath.root().toString();
         return rootPath.substring(0, rootPath.length() - 1);
     }
 
-    static String shortPath(ActorPath actorPath) {
+    public static String shortPath(ActorPath actorPath) {
         return actorPath.toString().substring(host(actorPath).length());
     }
+
+    Map<String, Registration> localActors = new HashMap<>();
 
     public synchronized void register(ActorRef ref) {
         ActorPath actorPath = ref.path();

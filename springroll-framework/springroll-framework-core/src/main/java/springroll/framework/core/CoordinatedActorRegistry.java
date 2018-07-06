@@ -15,15 +15,22 @@ import java.util.function.Function;
 
 public class CoordinatedActorRegistry extends LocalActorRegistry implements DisposableBean {
 
-    String myHost;
+    protected Coordinator coordinator;
+    protected String myHost;
 
+    @SuppressWarnings("deprecated")
     public CoordinatedActorRegistry(ActorSystem actorSystem) {
         super(actorSystem);
         String rootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
         myHost = rootPath.substring(0, rootPath.length() - 1);
     }
 
-    Map<String, Map<String, Registration>> remoteActors = null;
+    public CoordinatedActorRegistry(ActorSystem actorSystem, Coordinator coordinator) {
+        this(actorSystem);
+        setCoordinator(coordinator);
+    }
+
+    protected Map<String, Map<String, Registration>> remoteActors = null;
 
     public synchronized void onSynchronize(Map<String, List<String>> all) {
         remoteActors = new HashMap<>();
@@ -73,19 +80,12 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         remoteActors.remove(host);
     }
 
-    Coordinator coordinator;
-
     public void setCoordinator(Coordinator coordinator) {
         this.coordinator = coordinator;
         coordinator.synchronize(this::onSynchronize);
         coordinator.listenProvide(this::onProvide);
         coordinator.listenUnProvide(this::onUnProvide);
         coordinator.listenUnProvideAll(this::onUnProvideAll);
-    }
-
-    public CoordinatedActorRegistry(ActorSystem actorSystem, Coordinator coordinator) {
-        this(actorSystem);
-        setCoordinator(coordinator);
     }
 
     @Override
@@ -104,10 +104,9 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         if(coordinator != null) coordinator.unprovide(myHost + shortPath);
     }
 
-    Registration lookup(String shortPath, Function<List<Registration>, Integer> elector) {
+    public Registration lookup(String shortPath, Function<List<Registration>, Integer> elector) {
         List<Registration> candidates = new ArrayList<>();
         for(Map.Entry<String, Map<String, Registration>> entry : remoteActors.entrySet()) {
-            String host = entry.getKey();
             for (Map.Entry<String, Registration> entry1 : entry.getValue().entrySet()) {
                 String shortPath1 = entry1.getKey();
                 if(shortPath.equals(shortPath1)) candidates.add(entry1.getValue());
@@ -116,14 +115,18 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         return candidates.isEmpty() ? null : candidates.get(elector.apply(candidates));
     }
 
-    Function<List<Registration>, Integer> defaultElector = list -> myHost.hashCode() % list.size();
+    protected Function<List<Registration>, Integer> elector = list -> myHost.hashCode() % list.size();
+
+    public void setElector(Function<List<Registration>, Integer> elector) {
+        this.elector = elector;
+    }
 
     @Override
     public synchronized ActorRef get(String shortPath) {
         Registration registration = localActors.get(shortPath);
         if(registration != null) return registration.getActorRef();
         if(coordinator != null) {
-            registration = lookup(shortPath, defaultElector);
+            registration = lookup(shortPath, elector);
             if (registration != null) return registration.getActorRef();
         }
         return null;
@@ -134,7 +137,7 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         Registration registration = localActors.get(shortPath);
         if(registration != null) return registration.getActorSelection();
         if(coordinator != null) {
-            registration = lookup(shortPath, defaultElector);
+            registration = lookup(shortPath, elector);
             if (registration != null) return registration.getActorSelection();
         }
         return null;

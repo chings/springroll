@@ -16,9 +16,9 @@ import java.util.Map;
 public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
 
-    private static Map<Class<? extends GenericActor>, Map<String, Map<Class, Method>>> behaviorsCache = new HashMap<>();
-    private synchronized static Map<String, Map<Class, Method>> analyseBehaviors(Class actorClass) {
-        Map<String, Map<Class, Method>> result = behaviorsCache.get(actorClass);
+    private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
+    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
+        Map<String, Map<Class<?>, Method>> result = behaviorsCache.get(actorClass);
         if(result != null) return result;
         result = new HashMap<>();
         for(Method method : actorClass.getMethods()) {
@@ -33,11 +33,7 @@ public class GenericActor extends AbstractActor {
             At at = method.getAnnotation(At.class);
             String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
             for(String stateKey : stateKeys) {
-                Map<Class, Method> stateBehaviors = result.get(stateKey);
-                if(stateBehaviors == null) {
-                    stateBehaviors = new HashMap<>();
-                    result.put(stateKey, stateBehaviors);
-                }
+                Map<Class<?>, Method> stateBehaviors = result.computeIfAbsent(stateKey, k -> new HashMap<>());
                 if(!method.isAccessible()) method.setAccessible(true);
                 stateBehaviors.put(paramType, method);
             }
@@ -46,16 +42,16 @@ public class GenericActor extends AbstractActor {
         return result;
     }
 
-    Map<String, Map<Class, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
+    protected Map<String, Map<Class<?>, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
 
     @Override
     public AbstractActor.Receive createReceive() {
         return stateReceive(At.BEGINNING);
     }
 
-    public Receive stateReceive(String state) {
-        Map<Class, Method> stateBehaviors = new HashMap<>();
-        Map<Class, Method> behaviors = allStateBehaviors.get(At.ALL);
+    protected Receive stateReceive(String state) {
+        Map<Class<?>, Method> stateBehaviors = new HashMap<>();
+        Map<Class<?>, Method> behaviors = allStateBehaviors.get(At.ALL);
         if(behaviors != null) stateBehaviors.putAll(behaviors);
         behaviors = allStateBehaviors.get(state);
         if(behaviors != null) stateBehaviors.putAll(behaviors);
@@ -65,7 +61,7 @@ public class GenericActor extends AbstractActor {
             return null;
         }
         ReceiveBuilder receiveBuilder = receiveBuilder();
-        for(Map.Entry<Class, Method> stateBehavior : stateBehaviors.entrySet()) {
+        for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
             receiveBuilder.match(stateBehavior.getKey(), arg -> {
                 Object result = stateBehavior.getValue().invoke(this, arg);
                 if(result == null) return;
