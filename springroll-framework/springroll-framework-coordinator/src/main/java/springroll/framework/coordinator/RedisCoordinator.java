@@ -3,7 +3,7 @@ package springroll.framework.coordinator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import springroll.framework.core.Coordinator;
 
 import java.nio.charset.Charset;
@@ -22,7 +22,7 @@ public class RedisCoordinator implements Coordinator, MessageListener {
     String keyPrefix = "SR:COORDINATION";
 
     @Autowired
-    RedisTemplate redisTemplate;
+    StringRedisTemplate redisTemplate;
 
     public String getTopic() {
         return topic;
@@ -48,8 +48,8 @@ public class RedisCoordinator implements Coordinator, MessageListener {
         return keyPrefix + ":" + keyInfo;
     }
 
-    public String event(String type, String actorPath) {
-        return type + ":" + actorPath;
+    public String event(String tag, String actorPath) {
+        return tag + ":" + actorPath;
     }
 
     @Override

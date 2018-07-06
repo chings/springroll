@@ -4,7 +4,6 @@ import akka.actor.ActorPath;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
-import akka.serialization.Serialization;
 import org.springframework.beans.factory.DisposableBean;
 
 import java.util.ArrayList;
@@ -18,11 +17,9 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
     protected Coordinator coordinator;
     protected String myHost;
 
-    @SuppressWarnings("deprecated")
     public CoordinatedActorRegistry(ActorSystem actorSystem) {
         super(actorSystem);
-        String rootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
-        myHost = rootPath.substring(0, rootPath.length() - 1);
+        myHost = Actors.getHost(actorSystem);
     }
 
     public CoordinatedActorRegistry(ActorSystem actorSystem, Coordinator coordinator) {

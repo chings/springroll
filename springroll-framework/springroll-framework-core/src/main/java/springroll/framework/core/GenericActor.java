@@ -26,7 +26,7 @@ public class GenericActor extends AbstractActor {
             if(on == null && !method.getName().startsWith("on")) continue;
             Class<?>[] paramTypes = method.getParameterTypes();
             if(paramTypes.length != 1) {
-                log.debug("'{}' skipped, a 'on' method must have only 1 param.", method.toGenericString());
+                log.debug("'{}' skipped, an 'on' method must have only 1 param.", method.toGenericString());
                 continue;
             }
             Class<?> paramType = on != null && on.value() != Object.class ? on.value() : paramTypes[0];

@@ -27,9 +27,8 @@ public class LocalActorRegistry implements ActorRegistry {
             this.actorPath = actorPath;
             this.cachedActorRef = cachedActorRef;
         }
-        @SuppressWarnings("deprecated")
         public ActorRef getActorRef() {
-            if(cachedActorRef == null) cachedActorRef = actorSystem.actorFor(actorPath);
+            if(cachedActorRef == null) cachedActorRef = Actors.resolve(actorSystem, actorPath);
             return cachedActorRef;
         }
         public ActorSelection getActorSelection() {
