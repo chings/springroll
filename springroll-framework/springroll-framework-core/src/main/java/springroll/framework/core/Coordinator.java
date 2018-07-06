@@ -10,7 +10,7 @@ public interface Coordinator {
     void unprovide(String actorPath);
     void unprovideAll(String host);
 
-    void synchronize(Consumer<Map<String, List<String>>> handler);
+    void synchronize(Consumer<List<String>> handler);
     void listenProvide(Consumer<String> handler);
     void listenUnProvide(Consumer<String> handler);
     void listenUnProvideAll(Consumer<String> handler);

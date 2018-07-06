@@ -12,9 +12,9 @@
     <artifactId>springroll-example</artifactId>
     <packaging>pom</packaging>
     <modules>
+        <module>springroll-example-model</module>
         <module>springroll-example-server</module>
         <module>springroll-example-client</module>
-        <module>springroll-example-model</module>
     </modules>
 
     <profiles>

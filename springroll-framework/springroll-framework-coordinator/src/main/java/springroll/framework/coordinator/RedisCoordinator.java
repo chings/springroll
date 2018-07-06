@@ -80,16 +80,14 @@ public class RedisCoordinator implements Coordinator, MessageListener {
     }
 
     @Override
-    public void synchronize(Consumer<Map<String, List<String>>> handler) {
-        Map<String, List<String>> all = new HashMap<>();
+    public void synchronize(Consumer<List<String>> handler) {
+        List<String> all = new ArrayList<>();
         Set<String> hosts = redisTemplate.opsForSet().members(key());
         for(String host : hosts) {
-            List<String> some = new ArrayList<>();
             Set<String> shortPaths = redisTemplate.opsForSet().members(key(host));
             for(String shortPath : shortPaths) {
-                some.add(shortPath);
+                all.add(host + shortPath);
             }
-            all.put(host, some);
         }
         handler.accept(all);
     }

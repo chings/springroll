@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class LocalActorRegistry implements ActorRegistry {
 
-    ActorSystem actorSystem;
+    protected ActorSystem actorSystem;
 
     public LocalActorRegistry(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
@@ -46,7 +46,7 @@ public class LocalActorRegistry implements ActorRegistry {
         return actorPath.toString().substring(host(actorPath).length());
     }
 
-    Map<String, Registration> localActors = new HashMap<>();
+    protected Map<String, Registration> localActors = new HashMap<>();
 
     public synchronized void register(ActorRef ref) {
         ActorPath actorPath = ref.path();

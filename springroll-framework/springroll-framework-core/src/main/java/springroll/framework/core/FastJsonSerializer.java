@@ -42,7 +42,9 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
         return o.getClass().getCanonicalName();
     }
 
-    ObjectSerializer actorRefSerializer = (jsonSerializer, actorRef, o1, type, i) -> jsonSerializer.write(Serialization.serializedActorPath((ActorRef)actorRef));
+    ObjectSerializer actorRefSerializer = (jsonSerializer, actorRef, o1, type, i) -> {
+        jsonSerializer.write(Serialization.serializedActorPath((ActorRef)actorRef));
+    };
 
     SerializeConfig serializeConfig = new SerializeConfig() {{
         put(ActorRef.class, actorRefSerializer);

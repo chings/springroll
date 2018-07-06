@@ -29,16 +29,14 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
 
     protected Map<String, Map<String, Registration>> remoteActors = null;
 
-    public synchronized void onSynchronize(Map<String, List<String>> all) {
+    public synchronized void onSynchronize(List<String> all) {
         remoteActors = new HashMap<>();
-        for(Map.Entry<String, List<String>> entry : all.entrySet()) {
-            String host = entry.getKey();
-            Map<String, Registration> registrations = new HashMap<>();
-            for(String shortPath : entry.getValue()) {
-                Registration registration = new Registration(host + shortPath);
-                registrations.put(shortPath, registration);
-            }
-            remoteActors.put(host, registrations);
+        for(String actorPath : all) {
+            String[] tuple = split(actorPath);
+            String host = tuple[0], shortPath = tuple[1];
+            Map<String, Registration> registrations = remoteActors.computeIfAbsent(host, (key) -> new HashMap<>());
+            Registration registration = new Registration(host + shortPath);
+            registrations.put(shortPath, registration);
         }
     }
 
