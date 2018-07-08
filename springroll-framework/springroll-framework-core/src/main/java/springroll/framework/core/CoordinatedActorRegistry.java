@@ -29,18 +29,9 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
     public synchronized void onSynchronize(List<String> all) {
         remoteActors.clear();
         for(String actorPath : all) {
-            String[] tuple = split(actorPath);
-            String host = tuple[0], shortPath = tuple[1];
-            remoteActors.add(shortPath, new Registration(host + shortPath));
+            String shortPath = shortPath(actorPath);
+            remoteActors.add(shortPath, new Registration(actorPath));
         }
-    }
-
-    public static String[] split(String fullActorPath) {
-        int n = 0;
-        for(int i = 0; i < 3; i++) {
-            n = fullActorPath.indexOf('/', n + 1);
-        }
-        return new String[] { fullActorPath.substring(0, n), fullActorPath.substring(n) };
     }
 
     public synchronized void onProvide(String actorPath) {

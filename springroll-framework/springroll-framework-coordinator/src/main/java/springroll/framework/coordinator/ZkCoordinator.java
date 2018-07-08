@@ -1,4 +1,4 @@
-package springroll.framework.coordinator.zk;
+package springroll.framework.coordinator;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -43,15 +43,15 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     Map<String, String> providedActorPaths = new HashMap<>();
     Map<TreeCacheEvent.Type, Consumer<String>> handlers = new HashMap<>();
 
-    static void ensureCreate(CuratorFramework client, String path) {
-        String[] nodeNames = path.split("/");
-        String p = "";
+    static void ensureCreate(CuratorFramework client, String nodePath) {
+        String[] nodeNames = nodePath.split("/");
+        String path = "";
         for (String nodeName : nodeNames) {
             if(StringUtils.isEmpty(nodeName)) continue;
-            p += "/" + nodeName;
+            path += "/" + nodeName;
             try {
-                if(client.checkExists().forPath(p) == null) {
-                    client.create().withMode(CreateMode.PERSISTENT).forPath(p);
+                if(client.checkExists().forPath(path) == null) {
+                    client.create().withMode(CreateMode.PERSISTENT).forPath(path);
                 }
             } catch(Exception x) {
                 log.error("Ugh! {}", x.getMessage(), x);
@@ -63,8 +63,6 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     public void afterPropertiesSet() throws Exception {
         ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(1000, 3);
         client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
-        client.getUnhandledErrorListenable().addListener((message, x) -> log.error(message, x));
-        client.getConnectionStateListenable().addListener((client, newState) -> log.info("Connection state changed: {}", newState));
         client.start();
         ensureCreate(client, rootPath);
         cache = TreeCache.newBuilder(client, rootPath).setCacheData(true).build();
@@ -79,8 +77,8 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     @Override
     public void provide(String actorPath) {
         try {
-            String nodeName = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/A", actorPath.getBytes(DEFAULT_CHARSET));
-            providedActorPaths.put(actorPath, nodeName);
+            String nodePath = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/A", actorPath.getBytes(DEFAULT_CHARSET));
+            providedActorPaths.put(actorPath, nodePath);
         } catch(Exception x) {
             log.error("Ugh! {}", x.getMessage(), x);
         }
@@ -88,10 +86,10 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     @Override
     public void unprovide(String actorPath) {
-        String nodeName = providedActorPaths.remove(actorPath);
-        if(StringUtils.isEmpty(nodeName)) return;
+        String nodePath = providedActorPaths.remove(actorPath);
+        if(StringUtils.isEmpty(nodePath)) return;
         try {
-            client.delete().forPath(nodeName);
+            client.delete().forPath(nodePath);
         } catch(Exception x) {
             log.error("Ugh! {}", x.getMessage(), x);
         }
@@ -99,9 +97,9 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     @Override
     public void unprovide() {
-        for(String nodeName : providedActorPaths.values()) {
+        for(String nodePath : providedActorPaths.values()) {
             try {
-                client.delete().forPath(nodeName);
+                client.delete().forPath(nodePath);
             } catch(Exception x) {
                 log.error("Ugh! {}", x.getMessage(), x);
             }
@@ -122,16 +120,14 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     @Override
     public void synchronize(Consumer<List<String>> handler) {
         List<String> actorPaths = new ArrayList<>();
-        Map<String, ChildData> children = cache.getCurrentChildren(rootPath);
-        if(children == null) return;
-        for(ChildData childData : children.values()) {
+        for(ChildData childData : cache.getCurrentChildren(rootPath).values()) {
             actorPaths.add(new String(childData.getData(), DEFAULT_CHARSET));
         }
         handler.accept(actorPaths);
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         cache.close();
         client.close();
     }

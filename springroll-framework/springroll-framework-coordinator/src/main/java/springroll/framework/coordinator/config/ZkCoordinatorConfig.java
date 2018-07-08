@@ -1,9 +1,9 @@
-package springroll.framework.coordinator.zk.config;
+package springroll.framework.coordinator.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springroll.framework.coordinator.zk.ZkCoordinator;
+import springroll.framework.coordinator.ZkCoordinator;
 
 @Configuration
 public class ZkCoordinatorConfig {

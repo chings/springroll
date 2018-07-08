@@ -44,27 +44,12 @@ public class LocalActorRegistry implements ActorRegistry {
         this.elector = elector;
     }
 
-    static int nPathStart(String s) {
+    public static String shortPath(String actorPath) {
         int n = 0;
         for(int i = 0; i < 3; i++) {
-            n = s.indexOf('/', n + 1);
+            n = actorPath.indexOf('/', n + 1);
         }
-        return n;
-    }
-
-    public static String host(String actorPath) {
-        int n = nPathStart(actorPath);
-        return actorPath.substring(0, n);
-    }
-
-    public static String shortPath(String actorPath) {
-        int n = nPathStart(actorPath);
         return actorPath.substring(n);
-    }
-
-    public static String[] split(String actorPath) {
-        int n = nPathStart(actorPath);
-        return new String[] { actorPath.substring(0, n), actorPath.substring(n) };
     }
 
     public synchronized void register(ActorRef ref) {
