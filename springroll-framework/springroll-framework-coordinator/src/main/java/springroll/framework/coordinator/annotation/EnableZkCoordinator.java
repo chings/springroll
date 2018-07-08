@@ -1,7 +1,7 @@
 package springroll.framework.coordinator.annotation;
 
 import org.springframework.context.annotation.Import;
-import springroll.framework.coordinator.config.RedisCoordinatorConfig;
+import springroll.framework.coordinator.zk.config.ZkCoordinatorConfig;
 
 import java.lang.annotation.*;
 
@@ -9,5 +9,5 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Inherited
 @Documented
-@Import(RedisCoordinatorConfig.class)
-public @interface EnableRedisCoordinator { }
+@Import(ZkCoordinatorConfig.class)
+public @interface EnableZkCoordinator { }

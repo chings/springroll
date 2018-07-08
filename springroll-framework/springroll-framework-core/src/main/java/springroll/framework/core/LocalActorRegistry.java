@@ -1,12 +1,12 @@
 package springroll.framework.core;
 
-import akka.actor.ActorPath;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
+import springroll.framework.core.util.SimpleMultiValueMap;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.function.Function;
 
 public class LocalActorRegistry implements ActorRegistry {
 
@@ -37,36 +37,53 @@ public class LocalActorRegistry implements ActorRegistry {
         }
     }
 
-    public static String host(ActorPath actorPath) {
-        String rootPath = actorPath.root().toString();
-        return rootPath.substring(0, rootPath.length() - 1);
+    protected SimpleMultiValueMap<String, Registration> localActors = new SimpleMultiValueMap<>();
+    protected Function<List<Registration>, Integer> elector = registrations -> 0;
+
+    public void setElector(Function<List<Registration>, Integer> elector) {
+        this.elector = elector;
     }
 
-    public static String shortPath(ActorPath actorPath) {
-        return actorPath.toString().substring(host(actorPath).length());
+    static int nPathStart(String s) {
+        int n = 0;
+        for(int i = 0; i < 3; i++) {
+            n = s.indexOf('/', n + 1);
+        }
+        return n;
     }
 
-    protected Map<String, Registration> localActors = new HashMap<>();
+    public static String host(String actorPath) {
+        int n = nPathStart(actorPath);
+        return actorPath.substring(0, n);
+    }
+
+    public static String shortPath(String actorPath) {
+        int n = nPathStart(actorPath);
+        return actorPath.substring(n);
+    }
+
+    public static String[] split(String actorPath) {
+        int n = nPathStart(actorPath);
+        return new String[] { actorPath.substring(0, n), actorPath.substring(n) };
+    }
 
     public synchronized void register(ActorRef ref) {
-        ActorPath actorPath = ref.path();
+        String actorPath = ref.path().toString();
         String shortPath = shortPath(actorPath);
-        localActors.put(shortPath, new Registration(actorPath.toString(), ref));
+        localActors.add(shortPath, new Registration(actorPath, ref));
     }
 
     public synchronized void unregister(ActorRef ref) {
-        ActorPath actorPath = ref.path();
-        String shortPath = shortPath(actorPath);
-        localActors.remove(shortPath);
+        localActors.forEachValue((key, registration) -> registration.actorPath.equals(ref.path().toString()));
     }
 
     public synchronized ActorRef get(String shortPath) {
-        Registration registration = localActors.get(shortPath);
+        Registration registration = localActors.getOne(shortPath, elector);
         return registration != null ? registration.getActorRef() : null;
     }
 
     public synchronized ActorSelection select(String shortPath) {
-        Registration registration = localActors.get(shortPath);
+        Registration registration = localActors.getOne(shortPath, elector);
         return registration != null ? registration.getActorSelection() : null;
     }
 
