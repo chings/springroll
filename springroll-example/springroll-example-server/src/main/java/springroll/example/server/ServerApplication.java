@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.shell.jline.PromptProvider;
 import springroll.example.chat.ChatActor;
+import springroll.framework.connector.annotation.EnableWebsocketConnector;
 import springroll.framework.coordinator.annotation.EnableZkCoordinator;
 import springroll.framework.core.annotation.ActorBean;
 import springroll.framework.core.annotation.EnableActorSystem;
@@ -17,6 +18,7 @@ import springroll.framework.core.annotation.EnableActorSystem;
 @SpringBootApplication
 @EnableZkCoordinator
 @EnableActorSystem
+@EnableWebsocketConnector
 public class ServerApplication {
     private static Logger log = LoggerFactory.getLogger(ServerApplication.class);
 
