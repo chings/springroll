@@ -32,15 +32,15 @@ public class WebsocketConnector implements InitializingBean, DisposableBean {
     AtomicInteger pingCounter = new AtomicInteger();
 
     private ByteString keepAlive() {
-        return ByteString.fromString(String.format("debug-%d", pingCounter.incrementAndGet()))
+        return ByteString.fromString(String.format("debug-%d", pingCounter.incrementAndGet()));
     }
 
-    public Flow<Message, Message, NotUsed> flow() {
-        return handleMessagesWithSinkSource(null, null);
+    public Flow<Message, Message, NotUsed> upgrade() {
+        return Flow.fromSinkAndSource(null, null);
     }
 
     public HttpResponse handle(HttpRequest request) {
-        return WebSocket.handleWebSocketRequestWith(request, flow());
+        return WebSocket.handleWebSocketRequestWith(request, upgrade());
     }
 
     @Override
