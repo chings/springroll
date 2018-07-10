@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
-import springroll.example.chat.ChatterActor;
+import springroll.example.chat.Chatter;
 import springroll.example.chat.Leave;
 import springroll.example.chat.Say;
 import springroll.example.chat.ToJoin;
@@ -26,14 +26,14 @@ public class ChatCommands {
     @Autowired
     ActorSystem actorSystem;
 
-    @ActorReference("chat")
+    @ActorReference("Chat")
     ActorRef chat;
 
     ActorRef chatter;
 
     @ShellMethod("Join the chat")
     public void join(@ShellOption(defaultValue = DEFAULT_NAME) String name) {
-        chatter = spawn(actorSystem, ChatterActor.class);
+        chatter = spawn(actorSystem, Chatter.class);
         tell(chatter, new ToJoin(chat, name));
     }
 

@@ -13,8 +13,8 @@ import java.util.List;
 import static springroll.framework.core.annotation.At.BEGINNING;
 
 
-public class ChatterActor extends GenericActor {
-    private static Logger log = LoggerFactory.getLogger(ChatterActor.class);
+public class Chatter extends GenericActor {
+    private static Logger log = LoggerFactory.getLogger(Chatter.class);
 
     public static final String CHATTING = "chatting";
 

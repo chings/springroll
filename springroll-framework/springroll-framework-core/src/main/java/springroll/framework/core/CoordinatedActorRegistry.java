@@ -40,7 +40,7 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
     }
 
     public synchronized void onUnprovide(String actorPath) {
-        remoteActors.forEachValue((key, registration) -> registration.actorPath.equals(actorPath));
+        remoteActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
     }
 
     public void setCoordinator(Coordinator coordinator) {

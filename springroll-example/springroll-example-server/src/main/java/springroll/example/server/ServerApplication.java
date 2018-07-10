@@ -9,8 +9,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.shell.jline.PromptProvider;
-import springroll.example.chat.ChatActor;
-import springroll.framework.connector.annotation.EnableWebsocketConnector;
+import springroll.example.chat.Chat;
+import springroll.example.chat.ChatAgent;
+import springroll.framework.connector.annotation.EnableWebSocketConnector;
 import springroll.framework.coordinator.annotation.EnableZkCoordinator;
 import springroll.framework.core.annotation.ActorBean;
 import springroll.framework.core.annotation.EnableActorSystem;
@@ -18,11 +19,11 @@ import springroll.framework.core.annotation.EnableActorSystem;
 @SpringBootApplication
 @EnableZkCoordinator
 @EnableActorSystem
-@EnableWebsocketConnector
+@EnableWebSocketConnector(ChatAgent.class)
 public class ServerApplication {
     private static Logger log = LoggerFactory.getLogger(ServerApplication.class);
 
-    @ActorBean(value = ChatActor.class, name = "chat")
+    @ActorBean(Chat.class)
     ActorRef chat;
 
     @Value("${application.name}")

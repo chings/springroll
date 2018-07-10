@@ -59,7 +59,7 @@ public class LocalActorRegistry implements ActorRegistry {
     }
 
     public synchronized void unregister(ActorRef ref) {
-        localActors.forEachValue((key, registration) -> registration.actorPath.equals(ref.path().toString()));
+        localActors.findAndRemove((key, registration) -> registration.actorPath.equals(ref.path().toString()));
     }
 
     public synchronized ActorRef get(String shortPath) {

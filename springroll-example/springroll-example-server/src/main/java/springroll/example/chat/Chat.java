@@ -6,7 +6,7 @@ import springroll.framework.core.GenericActor;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChatActor extends GenericActor {
+public class Chat extends GenericActor {
 
     Map<String, ActorRef> chatters = new HashMap<>();
 
