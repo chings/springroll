@@ -1,6 +1,7 @@
 .idea
 target
 *.iml
+*.log
 
 # General
 .DS_Store

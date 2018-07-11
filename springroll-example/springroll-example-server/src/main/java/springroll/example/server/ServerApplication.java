@@ -12,12 +12,10 @@ import org.springframework.shell.jline.PromptProvider;
 import springroll.example.chat.Chat;
 import springroll.example.chat.ChatAgent;
 import springroll.framework.connector.annotation.EnableWebSocketConnector;
-import springroll.framework.coordinator.annotation.EnableZkCoordinator;
 import springroll.framework.core.annotation.ActorBean;
 import springroll.framework.core.annotation.EnableActorSystem;
 
 @SpringBootApplication
-@EnableZkCoordinator
 @EnableActorSystem
 @EnableWebSocketConnector(ChatAgent.class)
 public class ServerApplication {

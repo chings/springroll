@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -24,19 +25,23 @@ import java.util.List;
 public class ActorBeanPostProcessor implements ApplicationContextAware, BeanPostProcessor, Ordered {
     private static Logger log = LoggerFactory.getLogger(ActorBeanPostProcessor.class);
 
+    ApplicationContext applicationContext;
     ActorSystem actorSystem;
     ActorRegistry actorRegistry;
-
-    ApplicationContext applicationContext;
-
-    public ActorBeanPostProcessor(ActorSystem actorSystem, ActorRegistry actorRegistry) {
-        this.actorSystem = actorSystem;
-        this.actorRegistry = actorRegistry;
-    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    @Autowired
+    public void setActorSystem(ActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
+    }
+
+    @Autowired
+    public void setActorRegistry(ActorRegistry actorRegistry) {
+        this.actorRegistry = actorRegistry;
     }
 
     public static Object[] wireConstructorArgs(Class<?> actorClass, BeanFactory factory) {

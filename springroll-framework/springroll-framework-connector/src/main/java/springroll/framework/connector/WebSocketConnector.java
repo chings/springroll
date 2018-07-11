@@ -8,13 +8,16 @@ import reactor.core.publisher.Mono;
 
 public class WebSocketConnector implements WebSocketHandler {
 
-    @Autowired
     ActorSystem actorSystem;
 
+    @Autowired
+    public void setActorSystem(ActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
+    }
 
     @Override
-    public Mono<Void> handle(WebSocketSession webSocketSession) {
-        return null;
+    public Mono<Void> handle(WebSocketSession session) {
+        return Mono.<Void>empty();
     }
 
 }

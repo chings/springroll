@@ -19,11 +19,6 @@
         </dependency>
         <dependency>
             <groupId>cn.ching.springroll</groupId>
-            <artifactId>springroll-framework-coordinator</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.ching.springroll</groupId>
             <artifactId>springroll-framework-connector</artifactId>
             <version>${project.version}</version>
         </dependency>

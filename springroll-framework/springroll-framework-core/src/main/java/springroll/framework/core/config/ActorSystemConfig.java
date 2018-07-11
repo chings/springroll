@@ -1,8 +1,9 @@
 package springroll.framework.core.config;
 
 import akka.actor.ActorSystem;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springroll.framework.core.*;
@@ -17,24 +18,26 @@ public class ActorSystemConfig {
         return ActorSystem.create();
     }
 
-    @Autowired(required = false)
-    Coordinator coordinator;
+    @ConditionalOnProperty("springroll.coordinator.zk.connectionString")
+    @Bean
+    @ConfigurationProperties(prefix = "springroll.coordinator.zk")
+    public Coordinator zkCoordinator() {
+        return new ZkCoordinator();
+    }
 
     @Bean
     public ActorRegistry actorRegistry() {
-        return coordinator != null ?
-                new CoordinatedActorRegistry(actorSystem(), coordinator) :
-                new LocalActorRegistry(actorSystem());
+        return new CoordinatedActorRegistry();
     }
 
     @Bean
     public BeanPostProcessor ActorBeanPostProcessor() {
-        return new ActorBeanPostProcessor(actorSystem(), actorRegistry());
+        return new ActorBeanPostProcessor();
     }
 
     @Bean
     public BeanPostProcessor ActorReferencePostProcessor() {
-        return new ActorReferencePostProcessor(actorRegistry());
+        return new ActorReferencePostProcessor();
     }
 
     @PreDestroy

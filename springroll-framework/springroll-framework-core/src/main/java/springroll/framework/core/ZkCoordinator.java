@@ -1,4 +1,4 @@
-package springroll.framework.coordinator;
+package springroll.framework.core;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
-import springroll.framework.core.Coordinator;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     String connectionString = "localhost:2181";
     String rootPath = "/springroll/actors";
+    String nodeNamePrefix = "A";
 
     public void setConnectionString(String connectionString) {
         this.connectionString = connectionString;
@@ -68,6 +68,9 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         cache = TreeCache.newBuilder(client, rootPath).setCacheData(true).build();
         cache.getListenable().addListener((client, event) -> {
             log.debug("incoming event: {}", event);
+            ChildData childData = event.getData();
+            if(childData == null) return;
+            if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
             Consumer<String> handler = handlers.get(event.getType());
             if(handler != null) handler.accept(new String(event.getData().getData(), DEFAULT_CHARSET));
         });
@@ -77,7 +80,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     @Override
     public void provide(String actorPath) {
         try {
-            String nodePath = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/A", actorPath.getBytes(DEFAULT_CHARSET));
+            String nodePath = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/" + nodeNamePrefix, actorPath.getBytes(DEFAULT_CHARSET));
             providedActorPaths.put(actorPath, nodePath);
         } catch(Exception x) {
             log.error("Ugh! {}", x.getMessage(), x);
@@ -128,6 +131,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     @Override
     public void destroy() {
+        unprovide();
         cache.close();
         client.close();
     }

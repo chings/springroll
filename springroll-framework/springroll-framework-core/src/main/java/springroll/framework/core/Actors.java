@@ -7,6 +7,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.concurrent.TimeUnit;
 
 public class Actors {
+
     public static final FiniteDuration INSTANTLY = FiniteDuration.create(100, TimeUnit.MICROSECONDS);
     public static final FiniteDuration SECONDLY = FiniteDuration.create(1, TimeUnit.SECONDS);
     public static final FiniteDuration MINUTElY = FiniteDuration.create(1, TimeUnit.MINUTES);

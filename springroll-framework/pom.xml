@@ -13,7 +13,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>springroll-framework-core</module>
-        <module>springroll-framework-coordinator</module>
         <module>springroll-framework-connector</module>
     </modules>
 

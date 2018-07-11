@@ -22,8 +22,7 @@ public class WebSocketConnectorConfig {
     @Bean
     public HandlerMapping webSocketMapping() {
         Map<String, WebSocketHandler> map = new HashMap<>();
-        map.put("/foo", websocketConnector());
-
+        map.put("/connect", websocketConnector());
         SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
         mapping.setUrlMap(map);
         return mapping;

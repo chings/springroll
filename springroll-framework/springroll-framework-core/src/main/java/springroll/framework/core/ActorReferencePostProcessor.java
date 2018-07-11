@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.util.ReflectionUtils;
@@ -17,7 +18,8 @@ public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
 
     ActorRegistry actorRegistry;
 
-    public ActorReferencePostProcessor(ActorRegistry actorRegistry) {
+    @Autowired
+    public void setActorRegistry(ActorRegistry actorRegistry) {
         this.actorRegistry = actorRegistry;
     }
 

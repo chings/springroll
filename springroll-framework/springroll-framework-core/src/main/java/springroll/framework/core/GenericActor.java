@@ -17,7 +17,7 @@ public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
 
     private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
-    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
+    private static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         Map<String, Map<Class<?>, Method>> result = behaviorsCache.get(actorClass);
         if(result != null) return result;
         result = new HashMap<>();

@@ -3,28 +3,77 @@ package springroll.framework.core;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
-import org.springframework.beans.factory.DisposableBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import springroll.framework.core.util.SimpleMultiValueMap;
 
 import java.util.List;
+import java.util.function.Function;
 
-public class CoordinatedActorRegistry extends LocalActorRegistry implements DisposableBean {
+public class CoordinatedActorRegistry implements ActorRegistry {
+    private static Logger log = LoggerFactory.getLogger(CoordinatedActorRegistry.class);
 
-    protected Coordinator coordinator;
-    protected String myHost;
+    public static class Registration {
+        String actorPath;
+        ActorRef cachedActorRef;
+        ActorSelection cachedActorSelection;
+        public Registration(String actorPath) {
+            this.actorPath = actorPath;
+        }
+        public Registration(String actorPath, ActorRef cachedActorRef) {
+            this.actorPath = actorPath;
+            this.cachedActorRef = cachedActorRef;
+        }
+        public ActorRef getActorRef(ActorSystem actorSystem) {
+            if(cachedActorRef == null) cachedActorRef = Actors.resolve(actorSystem, actorPath);
+            return cachedActorRef;
+        }
+        public ActorSelection getActorSelection(ActorSystem actorSystem) {
+            if(cachedActorSelection == null) cachedActorSelection = actorSystem.actorSelection(actorPath);
+            return cachedActorSelection;
+        }
+    }
 
-    public CoordinatedActorRegistry(ActorSystem actorSystem) {
-        super(actorSystem);
+    public static String shortPath(String actorPath) {
+        int n = 0;
+        for(int i = 0; i < 3; i++) {
+            n = actorPath.indexOf('/', n + 1);
+        }
+        return actorPath.substring(n);
+    }
+
+    ActorSystem actorSystem;
+    String myHost;
+    Coordinator coordinator;
+
+    SimpleMultiValueMap<String, Registration> localActors = new SimpleMultiValueMap<>();
+    Function<List<Registration>, Integer> localElector = registrations -> 0;
+
+    SimpleMultiValueMap<String, Registration> remoteActors = new SimpleMultiValueMap<>();
+    Function<List<Registration>, Integer> remoteElector = registrations -> myHost.hashCode() % registrations.size();
+
+    @Autowired
+    public void setActorSystem(ActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
         myHost = Actors.getHost(actorSystem);
-        elector = list -> myHost.hashCode() % list.size();
     }
 
-    public CoordinatedActorRegistry(ActorSystem actorSystem, Coordinator coordinator) {
-        this(actorSystem);
-        setCoordinator(coordinator);
+    @Autowired(required = false)
+    public void setCoordinator(Coordinator coordinator) {
+        this.coordinator = coordinator;
+        coordinator.listenProvide(this::onProvide);
+        coordinator.listenUnprovide(this::onUnprovide);
+        coordinator.synchronize(this::onSynchronize);
     }
 
-    protected SimpleMultiValueMap<String, Registration> remoteActors = new SimpleMultiValueMap<>();
+    public void setLocalElector(Function<List<Registration>, Integer> localElector) {
+        this.localElector = localElector;
+    }
+
+    public void setRemoteElector(Function<List<Registration>, Integer> remoteElector) {
+        this.remoteElector = remoteElector;
+    }
 
     public synchronized void onSynchronize(List<String> all) {
         remoteActors.clear();
@@ -43,51 +92,42 @@ public class CoordinatedActorRegistry extends LocalActorRegistry implements Disp
         remoteActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
     }
 
-    public void setCoordinator(Coordinator coordinator) {
-        this.coordinator = coordinator;
-        coordinator.synchronize(this::onSynchronize);
-        coordinator.listenProvide(this::onProvide);
-        coordinator.listenUnprovide(this::onUnprovide);
-    }
-
     @Override
     public synchronized void register(ActorRef ref) {
-        super.register(ref);
-        if(coordinator != null) coordinator.provide(myHost + shortPath(ref.path().toString()));
+        String actorPath = ref.path().toString();
+        String shortPath = shortPath(actorPath);
+        localActors.add(shortPath, new Registration(actorPath, ref));
+        if(coordinator != null) coordinator.provide(myHost + shortPath);
     }
 
     @Override
     public synchronized void unregister(ActorRef ref) {
-        super.unregister(ref);
-        if(coordinator != null) coordinator.unprovide(myHost + shortPath(ref.path().toString()));
+        String actorPath = ref.path().toString();
+        String shortPath = shortPath(actorPath);
+        localActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
+        if(coordinator != null) coordinator.unprovide(myHost + shortPath);
     }
-
 
     @Override
     public synchronized ActorRef get(String shortPath) {
-        ActorRef result = super.get(shortPath);
-        if(result != null) return result;
+        Registration registration = localActors.getOne(shortPath, localElector);
+        if(registration != null) return registration.getActorRef(actorSystem);
         if(coordinator != null) {
-            Registration registration = remoteActors.getOne(shortPath, elector);
-            if(registration != null) return registration.getActorRef();
+            registration = remoteActors.getOne(shortPath, remoteElector);
+            if(registration != null) return registration.getActorRef(actorSystem);
         }
         return null;
     }
 
     @Override
     public synchronized ActorSelection select(String shortPath) {
-        ActorSelection result = super.select(shortPath);
-        if(result != null) return result;
+        Registration registration = localActors.getOne(shortPath, localElector);
+        if(registration != null) return registration.getActorSelection(actorSystem);
         if(coordinator != null) {
-            Registration registration = remoteActors.getOne(shortPath, elector);
-            if(registration != null) return registration.getActorSelection();
+            registration = remoteActors.getOne(shortPath, remoteElector);
+            if(registration != null) return registration.getActorSelection(actorSystem);
         }
         return null;
-    }
-
-    @Override
-    public void destroy() {
-        if(coordinator != null) coordinator.unprovide();
     }
 
 }

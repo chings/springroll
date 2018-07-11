@@ -6,11 +6,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.shell.jline.PromptProvider;
-import springroll.framework.coordinator.annotation.EnableZkCoordinator;
 import springroll.framework.core.annotation.EnableActorSystem;
 
 @SpringBootApplication
-@EnableZkCoordinator
 @EnableActorSystem
 public class ClientApplication {
 
