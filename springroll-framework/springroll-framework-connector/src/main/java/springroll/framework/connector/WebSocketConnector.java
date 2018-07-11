@@ -45,24 +45,24 @@ public class WebSocketConnector implements WebSocketHandler, InitializingBean {
         if(principal == null) return Mono.error(new IllegalAccessException("principal not present"));
 
         Flux<MessageDelivery> source = session.receive()
-                .map(marshaller::normalize)
+                .map(marshaller::unmarshal)
                 .map(this::delivery)
-                .filter(express -> express != null);
+                .filter(delivery -> delivery != null);
         UnicastProcessor<Object> output = UnicastProcessor.create();
         FluxSink<Object> sink = output.sink();
         tell(connectionMaster, new Connected(principal.getName(), source, sink));
         return session.send(output.map(marshaller::marshal));
     }
 
-    public MessageDelivery delivery(NormalizedMessage normalizedMessage) {
-        String to = normalizedMessage.getTo();
-        String type = normalizedMessage.getType();
+    public MessageDelivery delivery(SemiMessage semiMessage) {
+        String to = semiMessage.getTo();
+        String type = semiMessage.getType();
         if(to == null || type == null) return null;
         ActorRef toRef = actorRegistry.get(to);
         if(toRef == null) return null;
         Class<?> messageClass = Classes.guess(type);
         if(messageClass == null) return null;
-        Object message = marshaller.unmarshal(normalizedMessage, messageClass);
+        Object message = marshaller.unmarshal(semiMessage, messageClass);
         if(message == null) return null;
         return new MessageDelivery(message, toRef);
     }

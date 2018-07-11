@@ -4,10 +4,10 @@ import org.springframework.web.reactive.socket.WebSocketMessage;
 
 public interface Marshaller {
 
-    WebSocketMessage marshal(Object event);
+    WebSocketMessage marshal(Object message);
 
-    NormalizedMessage normalize(WebSocketMessage rawMessage);
+    SemiMessage unmarshal(WebSocketMessage rawMessage);
 
-    Object unmarshal(NormalizedMessage message, Class<?> finalClass);
+    Object unmarshal(SemiMessage semiMessage, Class<?> messageClass);
 
 }

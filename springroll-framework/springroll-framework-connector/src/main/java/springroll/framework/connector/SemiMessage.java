@@ -2,7 +2,7 @@ package springroll.framework.connector;
 
 import java.util.HashMap;
 
-public class NormalizedMessage extends HashMap<String, Object> {
+public class SemiMessage extends HashMap<String, Object> {
 
     public static String TO = "to";
     public static String TYPE = "type";
