@@ -1,8 +1,6 @@
 package springroll.framework.core;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
+import akka.actor.*;
 import akka.japi.pf.ReceiveBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +72,10 @@ public class GenericActor extends AbstractActor {
         }
         receiveBuilder.matchAny(arg -> log.warn("unrecognized: {}", arg));
         return receiveBuilder.build();
+    }
+
+    protected ActorRef spawn(Class<? extends Actor> childActorClass, Object... args) {
+        return this.getContext().actorOf(Props.create(childActorClass, args), childActorClass.getSimpleName());
     }
 
     protected void tell(ActorRef actor, Object message) {

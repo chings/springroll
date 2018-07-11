@@ -13,11 +13,11 @@ public class Actors {
     public static final FiniteDuration MINUTElY = FiniteDuration.create(1, TimeUnit.MINUTES);
 
     public static ActorRef spawn(ActorSystem system, Class<? extends Actor> actorClass, Object... args) {
-        return system.actorOf(Props.create(actorClass, args));
+        return system.actorOf(Props.create(actorClass, args), actorClass.getSimpleName());
     }
 
     public static ActorRef spawn(ActorContext context, Class<? extends Actor> actorClass, Object... args) {
-        return context.actorOf(Props.create(actorClass, args));
+        return context.actorOf(Props.create(actorClass, args), actorClass.getSimpleName());
     }
 
     public static ActorRef resolve(ActorSystem system, String actorPath) {
