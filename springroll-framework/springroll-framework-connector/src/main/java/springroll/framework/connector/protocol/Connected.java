@@ -2,27 +2,22 @@ package springroll.framework.connector.protocol;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import springroll.framework.connector.NormalizedMessage;
-import springroll.framework.core.AgentActor;
+import springroll.framework.connector.MessageDelivery;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 public class Connected implements Serializable {
 
     String principal;
-    Flux<NormalizedMessage> source;
+    Flux<MessageDelivery> source;
     FluxSink<Object> sink;
-    Map<Class<? extends AgentActor>, List<String>> agentRegistrations;
 
     public Connected() { }
 
-    public Connected(String principal, Flux<NormalizedMessage> source, FluxSink<Object> sink, Map<Class<? extends AgentActor>, List<String>> agentRegistrations) {
+    public Connected(String principal, Flux<MessageDelivery> source, FluxSink<Object> sink) {
         this.principal = principal;
         this.source = source;
         this.sink = sink;
-        this.agentRegistrations = agentRegistrations;
     }
 
     public String getPrincipal() {
@@ -33,11 +28,11 @@ public class Connected implements Serializable {
         this.principal = principal;
     }
 
-    public Flux<NormalizedMessage> getSource() {
+    public Flux<MessageDelivery> getSource() {
         return source;
     }
 
-    public void setSource(Flux<NormalizedMessage> source) {
+    public void setSource(Flux<MessageDelivery> source) {
         this.source = source;
     }
 
@@ -47,14 +42,6 @@ public class Connected implements Serializable {
 
     public void setSink(FluxSink<Object> sink) {
         this.sink = sink;
-    }
-
-    public Map<Class<? extends AgentActor>, List<String>> getAgentRegistrations() {
-        return agentRegistrations;
-    }
-
-    public void setAgentRegistrations(Map<Class<? extends AgentActor>, List<String>> agentRegistrations) {
-        this.agentRegistrations = agentRegistrations;
     }
 
 }

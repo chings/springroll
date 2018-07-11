@@ -12,7 +12,7 @@ public class ConnectionMaster extends GenericActor {
     Map<String, ActorRef> connections = new ConcurrentHashMap<>();
 
     public void on(Connected connected) {
-        ActorRef connection = spawn(Connection.class);
+        ActorRef connection = spawn(connected.getPrincipal(), Connection.class);
         connections.put(connected.getPrincipal(), connection);
         tell(connection, connected);
     }

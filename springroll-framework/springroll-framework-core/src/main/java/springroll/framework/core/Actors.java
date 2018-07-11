@@ -12,16 +12,16 @@ public class Actors {
     public static final FiniteDuration SECONDLY = FiniteDuration.create(1, TimeUnit.SECONDS);
     public static final FiniteDuration MINUTElY = FiniteDuration.create(1, TimeUnit.MINUTES);
 
-    public static ActorRef spawn(ActorSystem system, Class<? extends Actor> actorClass, Object... args) {
-        return system.actorOf(Props.create(actorClass, args), actorClass.getSimpleName());
+    public static ActorRef spawn(ActorSystem system, String name, Class<? extends Actor> actorClass, Object... args) {
+        return system.actorOf(Props.create(actorClass, args), name);
     }
 
-    public static ActorRef spawn(ActorContext context, Class<? extends Actor> actorClass, Object... args) {
-        return context.actorOf(Props.create(actorClass, args), actorClass.getSimpleName());
+    public static ActorRef spawn(ActorSystem system, Class<? extends Actor> actorClass, Object... args) {
+        return spawn(system, actorClass.getSimpleName(), actorClass, args);
     }
 
     public static ActorRef resolve(ActorSystem system, String actorPath) {
-        return ((ExtendedActorSystem)system).provider().resolveActorRef(actorPath);
+        return system.provider().resolveActorRef(actorPath);
     }
 
     @SuppressWarnings("deprecated")

@@ -6,8 +6,8 @@ public interface Marshaller {
 
     WebSocketMessage marshal(Object event);
 
-    Object unmarshal(WebSocketMessage webSocketMessage);
+    NormalizedMessage normalize(WebSocketMessage rawMessage);
 
-    NormalizedMessage normalize(WebSocketMessage webSocketMessage);
+    Object unmarshal(NormalizedMessage message, Class<?> finalClass);
 
 }

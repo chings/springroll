@@ -15,7 +15,7 @@ public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
 
     private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
-    private static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
+    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         Map<String, Map<Class<?>, Method>> result = behaviorsCache.get(actorClass);
         if(result != null) return result;
         result = new HashMap<>();
@@ -53,11 +53,6 @@ public class GenericActor extends AbstractActor {
         if(behaviors != null) stateBehaviors.putAll(behaviors);
         behaviors = allStateBehaviors.get(state);
         if(behaviors != null) stateBehaviors.putAll(behaviors);
-        if(stateBehaviors.isEmpty()) {
-            log.warn("empty stateBehaviors, should terminate");
-            terminate();
-            return null;
-        }
         ReceiveBuilder receiveBuilder = receiveBuilder();
         for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
             receiveBuilder.match(stateBehavior.getKey(), arg -> {
@@ -70,12 +65,20 @@ public class GenericActor extends AbstractActor {
                 if(Boolean.FALSE.equals(result)) terminate();
             });
         }
-        receiveBuilder.matchAny(arg -> log.warn("unrecognized: {}", arg));
+        receiveBuilder.matchAny(this::otherwise);
         return receiveBuilder.build();
     }
 
+    public void otherwise(Object message) {
+        log.warn("unhandled: {}", message);
+    }
+
+    protected ActorRef spawn(String name, Class<? extends Actor> childActorClass, Object... args) {
+        return this.getContext().actorOf(Props.create(childActorClass, args), name);
+    }
+
     protected ActorRef spawn(Class<? extends Actor> childActorClass, Object... args) {
-        return this.getContext().actorOf(Props.create(childActorClass, args), childActorClass.getSimpleName());
+        return spawn(childActorClass.getSimpleName(), childActorClass, args);
     }
 
     protected void tell(ActorRef actor, Object message) {
