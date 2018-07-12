@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>cn.ching.springroll</groupId>
-            <artifactId>springroll-example-model</artifactId>
+            <artifactId>springroll-example-protocol</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
