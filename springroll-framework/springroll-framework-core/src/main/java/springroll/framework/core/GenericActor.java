@@ -16,28 +16,27 @@ public class GenericActor extends AbstractActor {
 
     private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
     private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
-        Map<String, Map<Class<?>, Method>> result = behaviorsCache.get(actorClass);
-        if(result != null) return result;
-        result = new HashMap<>();
-        for(Method method : actorClass.getMethods()) {
-            On on = method.getAnnotation(On.class);
-            if(on == null && !method.getName().startsWith("on")) continue;
-            Class<?>[] paramTypes = method.getParameterTypes();
-            if(paramTypes.length != 1) {
-                log.debug("'{}' skipped, an 'on' method must have only 1 param.", method.toGenericString());
-                continue;
+        return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
+            Map<String, Map<Class<?>, Method>> result = new HashMap<>();
+            for(Method method : actorClazz.getMethods()) {
+                On on = method.getAnnotation(On.class);
+                if(on == null && !method.getName().startsWith("on")) continue;
+                Class<?>[] paramTypes = method.getParameterTypes();
+                if(paramTypes.length != 1) {
+                    log.debug("'{}' skipped, an 'on' method must have only 1 param.", method.toGenericString());
+                    continue;
+                }
+                Class<?> paramType = on != null && on.value() != Object.class ? on.value() : paramTypes[0];
+                At at = method.getAnnotation(At.class);
+                String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
+                for(String stateKey : stateKeys) {
+                    Map<Class<?>, Method> stateBehaviors = result.computeIfAbsent(stateKey, key -> new HashMap<>());
+                    if(!method.isAccessible()) method.setAccessible(true);
+                    stateBehaviors.put(paramType, method);
+                }
             }
-            Class<?> paramType = on != null && on.value() != Object.class ? on.value() : paramTypes[0];
-            At at = method.getAnnotation(At.class);
-            String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
-            for(String stateKey : stateKeys) {
-                Map<Class<?>, Method> stateBehaviors = result.computeIfAbsent(stateKey, k -> new HashMap<>());
-                if(!method.isAccessible()) method.setAccessible(true);
-                stateBehaviors.put(paramType, method);
-            }
-        }
-        behaviorsCache.put(actorClass, result);
-        return result;
+            return result;
+        });
     }
 
     protected Map<String, Map<Class<?>, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
@@ -55,8 +54,8 @@ public class GenericActor extends AbstractActor {
         if(behaviors != null) stateBehaviors.putAll(behaviors);
         ReceiveBuilder receiveBuilder = receiveBuilder();
         for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
-            receiveBuilder.match(stateBehavior.getKey(), arg -> {
-                Object result = stateBehavior.getValue().invoke(this, arg);
+            receiveBuilder.match(stateBehavior.getKey(), message -> {
+                Object result = stateBehavior.getValue().invoke(this, message);
                 if(result == null) return;
                 if(result instanceof String) {
                     become((String)result);
@@ -85,7 +84,7 @@ public class GenericActor extends AbstractActor {
         actor.tell(message, this.getSelf());
     }
 
-    public void tell(ActorSelection actor, Object message) {
+    protected void tell(ActorSelection actor, Object message) {
         actor.tell(message, this.getSelf());
     }
 

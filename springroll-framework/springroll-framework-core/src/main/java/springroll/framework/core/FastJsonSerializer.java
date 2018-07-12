@@ -58,6 +58,7 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
 
     ObjectDeserializer actorRefDeserializer = new ObjectDeserializer() {
         @Override
+        @SuppressWarnings("unchecked")
         public <T> T deserialze(DefaultJSONParser defaultJSONParser, Type type, Object name) {
             JSONLexer lexer = defaultJSONParser.getLexer();
             String value = lexer.stringVal();
