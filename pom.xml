@@ -16,6 +16,7 @@
     <modules>
         <module>springroll-example</module>
         <module>springroll-framework</module>
+        <module>springroll-copyright</module>
     </modules>
 
     <dependencyManagement>
