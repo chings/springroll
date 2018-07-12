@@ -43,7 +43,25 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     Map<String, String> providedActorPaths = new HashMap<>();
     Map<TreeCacheEvent.Type, Consumer<String>> handlers = new HashMap<>();
 
-    static void ensureCreate(CuratorFramework client, String nodePath) {
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(1000, 3);
+        client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
+        client.start();
+        ensure(rootPath);
+        cache = TreeCache.newBuilder(client, rootPath).setCacheData(true).build();
+        cache.getListenable().addListener((client, event) -> {
+            log.debug("incoming event: {}", event);
+            ChildData childData = event.getData();
+            if(childData == null) return;
+            if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
+            Consumer<String> handler = handlers.get(event.getType());
+            if(handler != null) handler.accept(new String(event.getData().getData(), DEFAULT_CHARSET));
+        });
+        cache.start();
+    }
+
+    void ensure(String nodePath) {
         String[] nodeNames = nodePath.split("/");
         String path = "";
         for (String nodeName : nodeNames) {
@@ -57,24 +75,6 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
                 log.error("Ugh! {}", x.getMessage(), x);
             }
         }
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
-        client.start();
-        ensureCreate(client, rootPath);
-        cache = TreeCache.newBuilder(client, rootPath).setCacheData(true).build();
-        cache.getListenable().addListener((client, event) -> {
-            log.debug("incoming event: {}", event);
-            ChildData childData = event.getData();
-            if(childData == null) return;
-            if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
-            Consumer<String> handler = handlers.get(event.getType());
-            if(handler != null) handler.accept(new String(event.getData().getData(), DEFAULT_CHARSET));
-        });
-        cache.start();
     }
 
     @Override

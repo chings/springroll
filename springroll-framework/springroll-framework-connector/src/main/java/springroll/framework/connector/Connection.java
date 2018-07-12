@@ -11,6 +11,9 @@ import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.core.GenericActor;
 import springroll.framework.core.annotation.At;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class Connection extends GenericActor {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
 
@@ -18,8 +21,15 @@ public class Connection extends GenericActor {
     public static String CONNECTED = "CONNECTED";
 
     String principal;
-    Flux<Tuple2<Object, ActorRef>> source;
+    Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
+
+    LinkedHashMap<ActorRef, Long> recentAssociations = new LinkedHashMap<ActorRef, Long>(10) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<ActorRef, Long> eldest) {
+            return super.removeEldestEntry(eldest);
+        }
+    };
 
     public void on(Connected connected) {
         principal = connected.getPrincipal();
@@ -34,18 +44,30 @@ public class Connection extends GenericActor {
         sink.next(message);
     }
 
-    public void onNext(Tuple2<Object, ActorRef> tuple2) {
-        tell(tuple2.getT2(), tuple2.getT1());
+    public void onNext(Tuple2<ActorRef, Object> tuple2) {
+        ActorRef actorRef = tuple2.getT1();
+        Object message = tuple2.getT2();
+        tell(actorRef, message);
+        recentAssociations.put(actorRef, System.currentTimeMillis());
     }
 
-    public void onError(Throwable error) {
-        log.error("Ugh! {}", error.getMessage(), error);
-        onComplete();
+    public void onError(Throwable x) {
+        log.error("Ugh! {}", x.getMessage(), x);
+        notifyDisconnected(x.getMessage());
+        terminate();
     }
 
     public void onComplete() {
-        tell(getContext().getParent(), new Disconnected(principal));
+        notifyDisconnected(null);
         terminate();
+    }
+
+    public void notifyDisconnected(String reason) {
+        Disconnected disconnected = new Disconnected(principal, reason);
+        tell(getContext().getParent(), disconnected);
+        for(ActorRef actor : recentAssociations.keySet()) {
+            tell(actor, disconnected);
+        }
     }
 
 }

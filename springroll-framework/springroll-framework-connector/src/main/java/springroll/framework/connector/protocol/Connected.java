@@ -10,12 +10,12 @@ import java.io.Serializable;
 public class Connected implements Serializable {
 
     String principal;
-    Flux<Tuple2<Object, ActorRef>> source;
+    Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
 
     public Connected() { }
 
-    public Connected(String principal, Flux<Tuple2<Object, ActorRef>> source, FluxSink<Object> sink) {
+    public Connected(String principal, Flux<Tuple2<ActorRef, Object>> source, FluxSink<Object> sink) {
         this.principal = principal;
         this.source = source;
         this.sink = sink;
@@ -29,11 +29,11 @@ public class Connected implements Serializable {
         this.principal = principal;
     }
 
-    public Flux<Tuple2<Object, ActorRef>> getSource() {
+    public Flux<Tuple2<ActorRef, Object>> getSource() {
         return source;
     }
 
-    public void setSource(Flux<Tuple2<Object, ActorRef>> source) {
+    public void setSource(Flux<Tuple2<ActorRef, Object>> source) {
         this.source = source;
     }
 
