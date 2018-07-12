@@ -1,20 +1,21 @@
 package springroll.framework.connector.protocol;
 
+import akka.actor.ActorRef;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import springroll.framework.connector.MessageDelivery;
+import reactor.util.function.Tuple2;
 
 import java.io.Serializable;
 
 public class Connected implements Serializable {
 
     String principal;
-    Flux<MessageDelivery> source;
+    Flux<Tuple2<Object, ActorRef>> source;
     FluxSink<Object> sink;
 
     public Connected() { }
 
-    public Connected(String principal, Flux<MessageDelivery> source, FluxSink<Object> sink) {
+    public Connected(String principal, Flux<Tuple2<Object, ActorRef>> source, FluxSink<Object> sink) {
         this.principal = principal;
         this.source = source;
         this.sink = sink;
@@ -28,11 +29,11 @@ public class Connected implements Serializable {
         this.principal = principal;
     }
 
-    public Flux<MessageDelivery> getSource() {
+    public Flux<Tuple2<Object, ActorRef>> getSource() {
         return source;
     }
 
-    public void setSource(Flux<MessageDelivery> source) {
+    public void setSource(Flux<Tuple2<Object, ActorRef>> source) {
         this.source = source;
     }
 

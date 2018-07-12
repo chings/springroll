@@ -1,23 +1,9 @@
 package springroll.framework.connector;
 
-import java.util.HashMap;
+public interface SemiMessage {
 
-public class SemiMessage extends HashMap<String, Object> {
-
-    public static String TO = "to";
-    public static String TYPE = "type";
-    public static String PAYLOAD = "payload";
-
-    public String getTo() {
-        return (String)get(TO);
-    }
-
-    public String getType() {
-        return (String)get(TYPE);
-    }
-
-    public Object getPayload() {
-        return get(PAYLOAD);
-    }
+    String getTo();
+    String getType();
+    Object getPayload();
 
 }

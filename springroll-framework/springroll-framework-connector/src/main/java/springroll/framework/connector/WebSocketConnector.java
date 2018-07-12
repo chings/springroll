@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
+import reactor.util.function.Tuple2;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.util.Classes;
 import springroll.framework.core.ActorRegistry;
@@ -44,27 +45,28 @@ public class WebSocketConnector implements WebSocketHandler, InitializingBean {
         Principal principal = handshakeInfo.getPrincipal().block();
         if(principal == null) return Mono.error(new IllegalAccessException("principal not present"));
 
-        Flux<MessageDelivery> source = session.receive()
-                .map(marshaller::unmarshal)
-                .map(this::delivery)
-                .filter(delivery -> delivery != null);
+        Flux<SemiMessage> input = session.receive().map(marshaller::unmarshal);
+        Flux<Tuple2<Object, ActorRef>> source = Flux.zip(input.map(this::unmarshal), input.map(this::findRecipient))
+                .filter(tuple2 -> tuple2.getT1() != null && tuple2.getT2() != null);
+
         UnicastProcessor<Object> output = UnicastProcessor.create();
         FluxSink<Object> sink = output.sink();
+
         tell(connectionMaster, new Connected(principal.getName(), source, sink));
-        return session.send(output.map(marshaller::marshal));
+        return session.send(output.map(marshaller::marshal).map(session::textMessage));
     }
 
-    public MessageDelivery delivery(SemiMessage semiMessage) {
-        String to = semiMessage.getTo();
+    public Object unmarshal(SemiMessage semiMessage) {
         String type = semiMessage.getType();
-        if(to == null || type == null) return null;
-        ActorRef toRef = actorRegistry.get(to);
-        if(toRef == null) return null;
+        if(type == null) return null;
         Class<?> messageClass = Classes.guess(type);
-        if(messageClass == null) return null;
-        Object message = marshaller.unmarshal(semiMessage, messageClass);
-        if(message == null) return null;
-        return new MessageDelivery(message, toRef);
+        return marshaller.unmarshal(messageClass, semiMessage.getPayload());
+    }
+
+    public ActorRef findRecipient(SemiMessage semiMessage) {
+        String to = semiMessage.getTo();
+        if(to == null) return null;
+        return actorRegistry.get(to);
     }
 
 }

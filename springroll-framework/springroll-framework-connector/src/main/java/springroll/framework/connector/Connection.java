@@ -1,10 +1,13 @@
 package springroll.framework.connector;
 
+import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.util.function.Tuple2;
 import springroll.framework.connector.protocol.Connected;
+import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.core.GenericActor;
 import springroll.framework.core.annotation.At;
 
@@ -15,7 +18,7 @@ public class Connection extends GenericActor {
     public static String CONNECTED = "CONNECTED";
 
     String principal;
-    Flux<MessageDelivery> source;
+    Flux<Tuple2<Object, ActorRef>> source;
     FluxSink<Object> sink;
 
     public void on(Connected connected) {
@@ -31,8 +34,8 @@ public class Connection extends GenericActor {
         sink.next(message);
     }
 
-    public void onNext(MessageDelivery delivery) {
-        tell(delivery.getTo(), delivery.getMessage());
+    public void onNext(Tuple2<Object, ActorRef> tuple2) {
+        tell(tuple2.getT2(), tuple2.getT1());
     }
 
     public void onError(Throwable error) {
@@ -41,7 +44,8 @@ public class Connection extends GenericActor {
     }
 
     public void onComplete() {
-        //TODO: cleanup
+        tell(getContext().getParent(), new Disconnected(principal));
+        terminate();
     }
 
 }
