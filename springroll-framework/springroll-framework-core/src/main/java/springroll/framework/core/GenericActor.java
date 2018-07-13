@@ -49,6 +49,7 @@ public class GenericActor extends AbstractActor {
     }
 
     protected Map<String, Map<Class<?>, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
+    protected String currentState = At.BEGINNING;
 
     @Override
     public AbstractActor.Receive createReceive() {
@@ -108,28 +109,29 @@ public class GenericActor extends AbstractActor {
         log.warn("unhandled: {}", message);
     }
 
-    protected ActorRef spawn(String name, Class<? extends Actor> childActorClass, Object... args) {
-        return this.getContext().actorOf(Props.create(childActorClass, args), name);
+    public ActorRef spawn(String name, Class<? extends Actor> childActorClass, Object... args) {
+        return getContext().actorOf(Props.create(childActorClass, args), name);
     }
 
-    protected ActorRef spawn(Class<? extends Actor> childActorClass, Object... args) {
+    public ActorRef spawn(Class<? extends Actor> childActorClass, Object... args) {
         return spawn(childActorClass.getSimpleName(), childActorClass, args);
     }
 
-    protected void tell(ActorRef actor, Object message) {
-        actor.tell(message, this.getSelf());
+    public void tell(ActorRef actor, Object message) {
+        actor.tell(message, getSelf());
     }
 
-    protected void tell(ActorSelection actor, Object message) {
-        actor.tell(message, this.getSelf());
+    public void tell(ActorSelection actor, Object message) {
+        actor.tell(message, getSelf());
     }
 
-    protected void become(String state) {
-        this.getContext().become(stateReceive(state));
+    public void become(String state) {
+        getContext().become(stateReceive(state));
+        currentState = state;
     }
 
-    protected void terminate() {
-        this.getContext().stop(this.getSelf());
+    public void terminate() {
+        getContext().stop(getSelf());
     }
 
 }

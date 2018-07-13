@@ -40,12 +40,13 @@ public class Chatter extends GenericActor {
     public void on(ChatterJoined chatterJoined) {
         if(CollectionUtils.isEmpty(chatterJoined.currentChatterNames)) {
             coChatterNames.add(chatterJoined.newChatterName);
+            log.info("{} Joined：{}", chatterJoined.newChatterName, coChatterNames);
         } else {
             coChatterNames.clear();
             coChatterNames.addAll(chatterJoined.currentChatterNames);
+            log.info("Joined：{}", coChatterNames);
             become(CHATTING);
         }
-        log.debug("{} Joined：{}", chatterJoined.newChatterName, coChatterNames);
     }
 
     @At(CHATTING)

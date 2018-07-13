@@ -2,11 +2,9 @@ package springroll.framework.connector;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketHandler;
-import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -15,7 +13,6 @@ import reactor.core.publisher.UnicastProcessor;
 import reactor.util.function.Tuple2;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.core.ActorRegistry;
-import springroll.framework.core.Actors;
 import springroll.framework.core.annotation.ActorBean;
 
 import java.security.Principal;

@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import springroll.framework.core.util.SimpleMultiValueMap;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class CoordinatedActorRegistry implements ActorRegistry {
     private static Logger log = LoggerFactory.getLogger(CoordinatedActorRegistry.class);
@@ -120,6 +122,21 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
+    public synchronized List<ActorRef> getAll(String shortPath) {
+        List<ActorRef> result = new ArrayList<>();
+        result.addAll(localActors.get(shortPath).stream()
+                .map(registration -> registration.getActorRef(actorSystem))
+                .collect(Collectors.toList()));
+        if(coordinator != null) {
+            result.addAll(remoteActors.get(shortPath).stream()
+                    .filter(registration -> registration.actorPath.indexOf(myHost) == -1)
+                    .map(registration -> registration.getActorRef(actorSystem))
+                    .collect(Collectors.toList()));
+        }
+        return result;
+    }
+
+    @Override
     public synchronized ActorSelection select(String shortPath) {
         Registration registration = localActors.getOne(shortPath, localElector);
         if(registration != null) return registration.getActorSelection(actorSystem);
@@ -128,6 +145,21 @@ public class CoordinatedActorRegistry implements ActorRegistry {
             if(registration != null) return registration.getActorSelection(actorSystem);
         }
         return null;
+    }
+
+    @Override
+    public synchronized List<ActorSelection> selectAll(String shortPath) {
+        List<ActorSelection> result = new ArrayList<>();
+        result.addAll(localActors.get(shortPath).stream()
+                .map(registration -> registration.getActorSelection(actorSystem))
+                .collect(Collectors.toList()));
+        if(coordinator != null) {
+            result.addAll(remoteActors.get(shortPath).stream()
+                    .filter(registration -> registration.actorPath.indexOf(myHost) == -1)
+                    .map(registration -> registration.getActorSelection(actorSystem))
+                    .collect(Collectors.toList()));
+        }
+        return result;
     }
 
 }

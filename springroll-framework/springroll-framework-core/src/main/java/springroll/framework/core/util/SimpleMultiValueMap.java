@@ -5,7 +5,8 @@ import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 public class SimpleMultiValueMap<K, V> extends LinkedMultiValueMap<K, V> {
@@ -16,12 +17,22 @@ public class SimpleMultiValueMap<K, V> extends LinkedMultiValueMap<K, V> {
         return candinates.get(elector.apply(candinates));
     }
 
-    public void findAndRemove(BiFunction<? super K, ? super V, Boolean> action) {
+    public void forEachOne(BiConsumer<? super K, ? super V> consumer) {
         for(Entry<K, List<V>> entry : this.entrySet()) {
             K key = entry.getKey();
             for(Iterator<V> it = entry.getValue().iterator(); it.hasNext(); ) {
                 V value = it.next();
-                if(action.apply(key, value)) it.remove();
+                consumer.accept(key, value);
+            }
+        }
+    }
+
+    public void findAndRemove(BiPredicate<? super K, ? super V> predicate) {
+        for(Entry<K, List<V>> entry : this.entrySet()) {
+            K key = entry.getKey();
+            for(Iterator<V> it = entry.getValue().iterator(); it.hasNext(); ) {
+                V value = it.next();
+                if(predicate.test(key, value)) it.remove();
             }
         }
     }
