@@ -42,9 +42,8 @@ public class WebSocketConnector implements WebSocketHandler {
         Principal principal = handshakeInfo.getPrincipal().block();
         if(principal == null) return Mono.error(new IllegalAccessException("principal not present"));
 
-        Flux<WebSocketMessage> input = session.receive();
-        Flux<Tuple2<ActorRef, Object>> source = input.map(marshaller::normalize).map(this::findRecipient)
-                .zipWith(input.map(marshaller::normalize).map(marshaller::unmarshal))
+        Flux<SemiMessage> input = session.receive().map(marshaller::normalize);
+        Flux<Tuple2<ActorRef, Object>> source = input.map(this::findRecipient).zipWith(input.map(marshaller::unmarshal))
                 .filter(tuple2 -> tuple2.getT1() != null && tuple2.getT2() != null);
 
         UnicastProcessor<Object> output = UnicastProcessor.create();

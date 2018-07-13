@@ -26,7 +26,7 @@ public class Connection extends GenericActor {
     Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
 
-    Set<ActorRef> associatedActors = new HashSet<>();
+    Set<ActorRef> joinedActors = new HashSet<>();
 
     public String on(Connected connected) {
         principal = connected.getPrincipal();
@@ -39,16 +39,16 @@ public class Connection extends GenericActor {
     @At(CONNECTED)
     public void on(Object message, ActorRef from) {
         sink.next(message);
-        if(message instanceof JoinMessage) associatedActors.add(from);
-        else if(message instanceof UnjoinMessage) associatedActors.remove(from);
+        if(message instanceof JoinMessage) joinedActors.add(from);
+        else if(message instanceof UnjoinMessage) joinedActors.remove(from);
     }
 
     public void onNext(Tuple2<ActorRef, Object> tuple2) {
         ActorRef to = tuple2.getT1();
         Object message = tuple2.getT2();
         tell(to, message);
-        if(message instanceof JoinMessage) associatedActors.add(to);
-        else if(message instanceof UnjoinMessage) associatedActors.remove(to);
+        if(message instanceof JoinMessage) joinedActors.add(to);
+        else if(message instanceof UnjoinMessage) joinedActors.remove(to);
     }
 
     public void onError(Throwable x) {
@@ -65,7 +65,7 @@ public class Connection extends GenericActor {
     public void notifyDisconnected(String reason) {
         Disconnected disconnected = new Disconnected(principal, reason);
         tell(getContext().getParent(), disconnected);
-        for(ActorRef actor : associatedActors) {
+        for(ActorRef actor : joinedActors) {
             tell(actor, disconnected);
         }
     }

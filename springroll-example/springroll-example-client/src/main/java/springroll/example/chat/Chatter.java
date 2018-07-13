@@ -31,6 +31,11 @@ public class Chatter extends GenericActor {
         tell(chat, join);
     }
 
+    @At(BEGINNING)
+    public void on(NotJoined notJoined) {
+        log.warn("NotJoined：{}", notJoined.getReason());
+    }
+
     @At({ BEGINNING, CHATTING })
     public void on(ChatterJoined chatterJoined) {
         if(CollectionUtils.isEmpty(chatterJoined.currentChatterNames)) {
