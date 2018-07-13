@@ -1,6 +1,7 @@
 package springroll.framework.core;
 
 import akka.actor.*;
+import akka.dispatch.sysmsg.Terminate;
 import akka.japi.pf.ReceiveBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +22,26 @@ public class GenericActor extends AbstractActor {
             for(Method method : actorClazz.getMethods()) {
                 On on = method.getAnnotation(On.class);
                 if(on == null && !method.getName().startsWith("on")) continue;
-                Class<?>[] paramTypes = method.getParameterTypes();
-                if(paramTypes.length != 1) {
-                    log.debug("'{}' skipped, an 'on' method must have only 1 param.", method.toGenericString());
+                Class<?> messageType = null;
+                if(on != null) messageType = on.value();
+                if(messageType == null || messageType == Object.class) {
+                    Class<?>[] paramTypes = method.getParameterTypes();
+                    for(Class<?> paramType : paramTypes) {
+                        if(paramType.isAssignableFrom(ActorRef.class)) continue;
+                        messageType = paramType;
+                        break;
+                    }
+                }
+                if(messageType == null) {
+                    log.warn("can not map for {}, just skipped.", method);
                     continue;
                 }
-                Class<?> paramType = on != null && on.value() != Object.class ? on.value() : paramTypes[0];
                 At at = method.getAnnotation(At.class);
                 String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
                 for(String stateKey : stateKeys) {
                     Map<Class<?>, Method> stateBehaviors = result.computeIfAbsent(stateKey, key -> new HashMap<>());
                     if(!method.isAccessible()) method.setAccessible(true);
-                    stateBehaviors.put(paramType, method);
+                    stateBehaviors.put(messageType, method);
                 }
             }
             return result;
@@ -55,17 +64,44 @@ public class GenericActor extends AbstractActor {
         ReceiveBuilder receiveBuilder = receiveBuilder();
         for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
             receiveBuilder.match(stateBehavior.getKey(), message -> {
-                Object result = stateBehavior.getValue().invoke(this, message);
-                if(result == null) return;
-                if(result instanceof String) {
-                    become((String)result);
-                    return;
-                }
-                if(Boolean.FALSE.equals(result)) terminate();
+                Method method = stateBehavior.getValue();
+                Object[] args = preHandle(message, method);
+                Object result = method.invoke(this, args);
+                postHandle(result);
             });
         }
         receiveBuilder.matchAny(this::otherwise);
         return receiveBuilder.build();
+    }
+
+    protected Object[] preHandle(Object message, Method method) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        Object[] result = new Object[paramTypes.length];
+        for(int i = 0; i < paramTypes.length; i++) {
+            Class<?> paramType = paramTypes[i];
+            if(paramType.isAssignableFrom(message.getClass())) {
+                result[i] = message;
+                continue;
+            }
+            if(paramType.isAssignableFrom(ActorRef.class)) {
+                result[i] = getSender();
+                continue;
+            }
+            result[i] = null;
+        }
+        return result;
+    }
+
+    protected void postHandle(Object result) {
+        if(result == null) return;
+        if(result instanceof String) {
+            become((String)result);
+            return;
+        }
+        if(result instanceof Terminate) {
+            terminate();
+            return;
+        }
     }
 
     public void otherwise(Object message) {

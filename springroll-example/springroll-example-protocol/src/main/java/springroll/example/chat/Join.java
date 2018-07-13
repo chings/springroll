@@ -1,19 +1,17 @@
 package springroll.example.chat;
 
-import akka.actor.ActorRef;
+import springroll.framework.protocol.JoinMessage;
 
 import java.io.Serializable;
 
-public class Join implements Serializable {
+public class Join implements JoinMessage, Serializable {
 
     String senderName;
-    ActorRef from;
 
     public Join() { }
 
-    public Join(String senderName, ActorRef from) {
+    public Join(String senderName) {
         this.senderName = senderName;
-        this.from = from;
     }
 
     public String getSenderName() {
@@ -22,14 +20,6 @@ public class Join implements Serializable {
 
     public void setSenderName(String senderName) {
         this.senderName = senderName;
-    }
-
-    public ActorRef getFrom() {
-        return from;
-    }
-
-    public void setFrom(ActorRef from) {
-        this.from = from;
     }
 
 }

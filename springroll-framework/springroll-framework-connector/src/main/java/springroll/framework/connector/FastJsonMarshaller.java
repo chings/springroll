@@ -2,6 +2,7 @@ package springroll.framework.connector;
 
 import com.alibaba.fastjson.JSON;
 import org.springframework.web.reactive.socket.WebSocketMessage;
+import springroll.framework.connector.util.Classes;
 
 import java.nio.charset.Charset;
 
@@ -15,13 +16,17 @@ public class FastJsonMarshaller implements Marshaller {
     }
 
     @Override
-    public SemiMessage unmarshal(WebSocketMessage rawMessage) {
+    public SemiMessage normalize(WebSocketMessage rawMessage) {
         return JSON.parseObject(rawMessage.getPayloadAsText(charset), SemiMapMessage.class);
     }
 
     @Override
-    public Object unmarshal(Class<?> messageClass, Object payload) {
-        return JSON.parseObject(JSON.toJSONString(payload), messageClass);
+    public Object unmarshal(SemiMessage semiMessage) {
+        String type = semiMessage.getType();
+        if(type == null) return null;
+        Class<?> messageClass = Classes.guess(type);
+        if(messageClass == null) return null;
+        return JSON.parseObject(JSON.toJSONString(semiMessage.getPayload()), messageClass);
     }
 
 }

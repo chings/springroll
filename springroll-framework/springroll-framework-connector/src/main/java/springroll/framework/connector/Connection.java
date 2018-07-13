@@ -10,45 +10,45 @@ import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.core.GenericActor;
 import springroll.framework.core.annotation.At;
+import springroll.framework.protocol.JoinMessage;
+import springroll.framework.protocol.UnjoinMessage;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Connection extends GenericActor {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
 
-    public static String CONNECTING = At.BEGINNING;
-    public static String CONNECTED = "CONNECTED";
+    public static final String CONNECTING = At.BEGINNING;
+    public static final String CONNECTED = "CONNECTED";
 
     String principal;
     Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
 
-    LinkedHashMap<ActorRef, Long> recentAssociations = new LinkedHashMap<ActorRef, Long>(10) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<ActorRef, Long> eldest) {
-            return super.removeEldestEntry(eldest);
-        }
-    };
+    Set<ActorRef> associatedActors = new HashSet<>();
 
-    public void on(Connected connected) {
+    public String on(Connected connected) {
         principal = connected.getPrincipal();
         source = connected.getSource();
         sink = connected.getSink();
         source.subscribe(this::onNext, this::onError, this::onComplete);
-        become(CONNECTED);
+        return CONNECTED;
     }
 
-    @Override
-    public void otherwise(Object message) {
+    @At(CONNECTED)
+    public void on(Object message, ActorRef from) {
         sink.next(message);
+        if(message instanceof JoinMessage) associatedActors.add(from);
+        else if(message instanceof UnjoinMessage) associatedActors.remove(from);
     }
 
     public void onNext(Tuple2<ActorRef, Object> tuple2) {
-        ActorRef actorRef = tuple2.getT1();
+        ActorRef to = tuple2.getT1();
         Object message = tuple2.getT2();
-        tell(actorRef, message);
-        recentAssociations.put(actorRef, System.currentTimeMillis());
+        tell(to, message);
+        if(message instanceof JoinMessage) associatedActors.add(to);
+        else if(message instanceof UnjoinMessage) associatedActors.remove(to);
     }
 
     public void onError(Throwable x) {
@@ -65,7 +65,7 @@ public class Connection extends GenericActor {
     public void notifyDisconnected(String reason) {
         Disconnected disconnected = new Disconnected(principal, reason);
         tell(getContext().getParent(), disconnected);
-        for(ActorRef actor : recentAssociations.keySet()) {
+        for(ActorRef actor : associatedActors) {
             tell(actor, disconnected);
         }
     }

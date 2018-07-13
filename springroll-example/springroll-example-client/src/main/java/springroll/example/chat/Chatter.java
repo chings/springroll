@@ -28,7 +28,6 @@ public class Chatter extends GenericActor {
         name = toJoin.name;
         Join join = new Join();
         join.senderName = name;
-        join.from = this.getSelf();
         tell(chat, join);
     }
 

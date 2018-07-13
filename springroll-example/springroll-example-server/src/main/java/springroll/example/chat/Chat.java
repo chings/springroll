@@ -8,30 +8,30 @@ import java.util.Map;
 
 public class Chat extends GenericActor {
 
-    Map<String, ActorRef> chatters = new HashMap<>();
+    Map<ActorRef, String> chatters = new HashMap<>();
 
-    public void on(Join join) {
+    public void on(Join join, ActorRef from) {
         if(chatters.containsKey(join.senderName)) return;
-        chatters.put(join.senderName, join.from);
-        chatters.forEach((name, ref) -> {
+        chatters.put(from, join.senderName);
+        chatters.forEach((to, name) -> {
             ChatterJoined message = new ChatterJoined(join.senderName);
-            if(name.equals(join.senderName)) message.setCurrentChatterNames(chatters.keySet());
-            tell(ref, message);
+            if(name.equals(join.senderName)) message.setCurrentChatterNames(chatters.values());
+            tell(to, message);
         });
     }
 
     public void on(Say say) {
         if(!chatters.containsKey(say.senderName)) return;
-        chatters.forEach((name, ref) -> {
-            tell(ref, new ChatterSaid(say.senderName, say.content));
+        chatters.forEach((to, name) -> {
+            tell(to, new ChatterSaid(say.senderName, say.content));
         });
     }
 
     public void on(Leave leave) {
         if(!chatters.containsKey(leave.senderName)) return;
         chatters.remove(leave.senderName);
-        chatters.forEach((name, ref) -> {
-            tell(ref, new ChatterLeft(leave.senderName));
+        chatters.forEach((to, name) -> {
+            tell(to, new ChatterLeft(leave.senderName));
         });
     }
 

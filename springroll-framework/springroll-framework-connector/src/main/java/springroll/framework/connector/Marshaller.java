@@ -6,8 +6,8 @@ public interface Marshaller {
 
     String marshal(Object message);
 
-    SemiMessage unmarshal(WebSocketMessage rawMessage);
+    SemiMessage normalize(WebSocketMessage rawMessage);
 
-    Object unmarshal(Class<?> messageClass, Object payload);
+    Object unmarshal(SemiMessage semiMessage);
 
 }

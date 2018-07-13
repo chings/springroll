@@ -27,8 +27,8 @@ public class WebSocketConnectorConfig {
         return new WebSocketConnector();
     }
 
-    @Value("${springroll.connector.path}")
-    String path = "/connect";
+    @Value("${springroll.connector.path:/connect}")
+    String path;
 
     @Bean
     public HandlerMapping webSocketMapping() {
