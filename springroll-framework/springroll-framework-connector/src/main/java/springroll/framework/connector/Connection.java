@@ -22,14 +22,14 @@ public class Connection extends GenericActor {
     public static final String CONNECTING = At.BEGINNING;
     public static final String CONNECTED = "CONNECTED";
 
-    String principal;
+    String principalName;
     Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
 
     Set<ActorRef> joinedActors = new HashSet<>();
 
     public String on(Connected connected) {
-        principal = connected.getPrincipal();
+        principalName = connected.getPrincipalName();
         source = connected.getSource();
         sink = connected.getSink();
         source.subscribe(this::onNext, this::onError, this::onComplete);
@@ -63,7 +63,7 @@ public class Connection extends GenericActor {
     }
 
     public void notifyDisconnected(String reason) {
-        Disconnected disconnected = new Disconnected(principal, reason);
+        Disconnected disconnected = new Disconnected(principalName, reason);
         tell(getContext().getParent(), disconnected);
         for(ActorRef actor : joinedActors) {
             tell(actor, disconnected);

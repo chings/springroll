@@ -2,26 +2,26 @@ package springroll.framework.connector.protocol;
 
 public class Disconnected {
 
-    String principal;
+    String principalName;
     String reason;
 
     public Disconnected() { }
 
-    public Disconnected(String principal) {
-        this.principal = principal;
+    public Disconnected(String principalName) {
+        this.principalName = principalName;
     }
 
-    public Disconnected(String principal, String reason) {
-        this.principal = principal;
+    public Disconnected(String principalName, String reason) {
+        this.principalName = principalName;
         this.reason = reason;
     }
 
-    public String getPrincipal() {
-        return principal;
+    public String getPrincipalName() {
+        return principalName;
     }
 
-    public void setPrincipal(String principal) {
-        this.principal = principal;
+    public void setPrincipalName(String principalName) {
+        this.principalName = principalName;
     }
 
     public String getReason() {

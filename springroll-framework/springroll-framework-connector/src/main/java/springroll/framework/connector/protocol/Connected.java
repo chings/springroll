@@ -9,24 +9,24 @@ import java.io.Serializable;
 
 public class Connected implements Serializable {
 
-    String principal;
+    String principalName;
     Flux<Tuple2<ActorRef, Object>> source;
     FluxSink<Object> sink;
 
     public Connected() { }
 
-    public Connected(String principal, Flux<Tuple2<ActorRef, Object>> source, FluxSink<Object> sink) {
-        this.principal = principal;
+    public Connected(String principalName, Flux<Tuple2<ActorRef, Object>> source, FluxSink<Object> sink) {
+        this.principalName = principalName;
         this.source = source;
         this.sink = sink;
     }
 
-    public String getPrincipal() {
-        return principal;
+    public String getPrincipalName() {
+        return principalName;
     }
 
-    public void setPrincipal(String principal) {
-        this.principal = principal;
+    public void setPrincipalName(String principalName) {
+        this.principalName = principalName;
     }
 
     public Flux<Tuple2<ActorRef, Object>> getSource() {

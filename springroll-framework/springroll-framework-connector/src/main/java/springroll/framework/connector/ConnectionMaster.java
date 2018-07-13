@@ -13,13 +13,14 @@ public class ConnectionMaster extends GenericActor {
     Map<String, ActorRef> connections = new ConcurrentHashMap<>();
 
     public void on(Connected connected) {
-        ActorRef connection = spawn(connected.getPrincipal(), Connection.class);
-        connections.put(connected.getPrincipal(), connection);
+        String principalName = connected.getPrincipalName();
+        ActorRef connection = spawn(principalName, Connection.class);
+        connections.put(principalName, connection);
         tell(connection, connected);
     }
 
     public void on(Disconnected disconnected) {
-        connections.remove(disconnected.getPrincipal());
+        connections.remove(disconnected.getPrincipalName());
     }
 
 }
