@@ -3,14 +3,23 @@ package springroll.framework.core;
 import akka.actor.*;
 import akka.dispatch.sysmsg.Terminate;
 import akka.japi.pf.ReceiveBuilder;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.compat.java8.FutureConverters;
 import springroll.framework.core.annotation.At;
 import springroll.framework.core.annotation.On;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static springroll.framework.core.Actors.SECONDLY;
 
 public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
@@ -117,6 +126,11 @@ public class GenericActor extends AbstractActor {
         return spawn(childActorClass.getSimpleName(), childActorClass, args);
     }
 
+    public void become(String state) {
+        getContext().become(stateReceive(state));
+        currentState = state;
+    }
+
     public void tell(ActorRef actor, Object message) {
         actor.tell(message, getSelf());
     }
@@ -125,9 +139,26 @@ public class GenericActor extends AbstractActor {
         actor.tell(message, getSelf());
     }
 
-    public void become(String state) {
-        getContext().become(stateReceive(state));
-        currentState = state;
+    public Object ask(ActorRef actor, Object message) {
+        try {
+            CompletionStage<Object> completionStage = FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)));
+            return completionStage.toCompletableFuture().get(1, TimeUnit.SECONDS);
+        } catch(InterruptedException | ExecutionException | TimeoutException x) {
+            return x;
+        }
+    }
+
+    public Object ask(ActorSelection actor, Object message) {
+        try {
+            CompletionStage<Object> completionStage = FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)));
+            return completionStage.toCompletableFuture().get(1, TimeUnit.SECONDS);
+        } catch(InterruptedException | ExecutionException | TimeoutException x) {
+            return x;
+        }
+    }
+
+    public void reply(Object message) {
+        getSender().tell(message, getSelf());
     }
 
     public void terminate() {

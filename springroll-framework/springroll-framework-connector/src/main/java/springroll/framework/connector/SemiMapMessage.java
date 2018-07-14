@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class SemiMapMessage extends HashMap<String, Object> implements SemiMessage {
 
-    public static String TO = "to";
+    public static String TO = "uri";
     public static String TYPE = "type";
     public static String PAYLOAD = "payload";
 

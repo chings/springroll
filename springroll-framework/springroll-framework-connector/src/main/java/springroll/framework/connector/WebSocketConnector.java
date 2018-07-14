@@ -37,7 +37,7 @@ public class WebSocketConnector implements WebSocketHandler {
     public Mono<Void> handle(WebSocketSession session) {
         HandshakeInfo handshakeInfo = session.getHandshakeInfo();
         Principal principal = handshakeInfo.getPrincipal().block();
-        if(principal == null) return Mono.error(new IllegalAccessException("principalName not present"));
+        //if(principal == null) return Mono.error(new IllegalAccessException("principalName not present"));
 
         Flux<SemiMessage> input = session.receive().map(marshaller::normalize);
         Flux<Tuple2<ActorRef, Object>> source = input.map(this::findRecipient).zipWith(input.map(marshaller::unmarshal))
