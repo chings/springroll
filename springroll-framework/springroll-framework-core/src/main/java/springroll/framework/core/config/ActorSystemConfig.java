@@ -1,6 +1,7 @@
 package springroll.framework.core.config;
 
 import akka.actor.ActorSystem;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,9 +14,12 @@ import javax.annotation.PreDestroy;
 @Configuration
 public class ActorSystemConfig {
 
+    @Value("${application.name:springroll}")
+    String applicationName;
+
     @Bean
     public ActorSystem actorSystem() {
-        return ActorSystem.create();
+        return ActorSystem.create(applicationName);
     }
 
     @Bean

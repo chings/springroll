@@ -38,7 +38,7 @@ public class WebSocketConnectorConfig {
         return new WebSocketConnector();
     }
 
-    @Value("${springroll.connector.path:/connect}")
+    @Value("${springroll.connector.path:/roll}")
     String path;
 
     @Bean

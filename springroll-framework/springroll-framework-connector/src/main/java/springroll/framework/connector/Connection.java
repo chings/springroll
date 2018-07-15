@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import springroll.framework.connector.protocol.Connected;
@@ -59,10 +60,11 @@ public class Connection extends GenericActor {
     public void onNext(Frame frame) {
         switch(frame.getMethod()) {
             case PING:
-                sink.next(new Frame(Method.PONG));
-                break;
-            case PONG:
-                sink.next(new Frame(Method.PING));
+                Frame pongFrame = new Frame(Method.PONG);
+                if(StringUtils.hasText(frame.getSerialNo())) {
+                    pongFrame.setReSerialNo(frame.getSerialNo());
+                }
+                sink.next(pongFrame);
                 break;
             case TELL:
                 ActorRef to = actorRegistry.resovle(frame.getUri());
@@ -77,6 +79,8 @@ public class Connection extends GenericActor {
                 ask(to, message, reply -> {
                     if(reply instanceof Throwable) {
                         Frame errorFrame = new Frame(Method.ERROR);
+                        errorFrame.setUri(frame.getUri());
+                        errorFrame.setReSerialNo(frame.getSerialNo());
                         sink.next(errorFrame);
                     } else {
                         Frame replyFrame = frameProtocol.marshal(reply);

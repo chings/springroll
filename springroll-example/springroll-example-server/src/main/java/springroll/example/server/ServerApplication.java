@@ -23,7 +23,7 @@ public class ServerApplication {
     @ActorBean(actorClass = Chat.class)
     ActorRef chat;
 
-    @Value("${application.name}")
+    @Value("${application.name:springroll}")
     String applicationName;
 
     @Bean

@@ -19,7 +19,7 @@ import java.util.Map;
  * Serial-No: 1
  * Content-Length: 18
  * Content-Type: application/json
- * Content-Class: Hello
+ * Content-Class: chat.Hello
  *
  * {content:"Hello!"}
  *
@@ -29,7 +29,7 @@ import java.util.Map;
  * Re-Serial-No: 1
  * Content-Length: 18
  * Content-Type: application/json
- * Content-Class: Welcome
+ * Content-Class: chat.Welcome
  *
  * {content:"Welcome!"}
  */
@@ -85,12 +85,12 @@ public class HttpLikeFrameProtocol implements FrameProtocol {
         BufferedReader reader = new BufferedReader(new StringReader(serialized));
         try {
             String line = reader.readLine();
-            String[] parts = line.split("\\s+");
+            String[] parts = line.split(" ", 2);
             Frame.Method method = Frame.Method.valueOf(parts[0].trim());
             Frame frame = new Frame(method);
             frame.setUri(parts[1].trim());
             while(StringUtils.hasText(line = reader.readLine())) {
-                parts = line.split("\\s*:\\s*");
+                parts = line.split(":", 2);
                 frame.setHeader(parts[0].trim(), parts[1].trim());
             }
             String content = IOUtils.readAll(reader);

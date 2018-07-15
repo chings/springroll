@@ -23,7 +23,7 @@ public class SpringActorSystemFactory extends AbstractExtensionId<SpringActorSys
 
     @Override
     public SpringActorSystem createExtension(ExtendedActorSystem system) {
-        return new SpringActorSystem(applicationContext, actorSystem);
+        return new SpringActorSystem(applicationContext, system);
     }
 
     @Override

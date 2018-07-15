@@ -26,9 +26,9 @@
                 <div class="row members-body" v-cloak>
                     <ul class="list-group members-group">
                         <li class="list-group-item member-item justify-content-between bg-faded"
-                            v-for="(value, key) in members">
-                            <img v-bind:src="value.avatar" class="rounded-circle mr-1">
-                            <small> {{ value.username }}</small>
+                            v-for="value in members">
+                            <img src="avatar.png" class="rounded-circle mr-1">
+                            <small> {{ value }}</small>
                         </li>
                     </ul>
                 </div>
@@ -44,12 +44,9 @@
                         <ul class="list-group message-group">
                             <li class="list-group-item message-item d-flex" v-for="message in messages"
                                 track-by="$index">
-                                <img v-bind:src="message.avatar" class="rounded-circle float-left mr-2"> {{
-                                message.message }}
+                                <img src="avatar.png" class="rounded-circle float-left mr-2"> {{ message.message }}
                                 <hr>
-                                <small class="text-muted">{{ message.username }} @ {{ formatMessageDate(message.date)
-                                    }}
-                                </small>
+                                <small class="text-muted">{{ message.username }} @ {{ formatMessageDate(message.date) }}</small>
                             </li>
                         </ul>
                     </div>
@@ -70,11 +67,14 @@
 
 <script src="js/vue/2.1.10/vue.min.js"></script>
 <script src="js/vue-focus/2.1.0/vue-focus.min.js"></script>
-<script src="js/socket.io/1.7.2/socket.io.min.js"></script>
 <script src="js/moment.js/2.17.1/moment.min.js"></script>
+<script src="js/springroll.js"></script>
 
 <script>
-    var socket = io();
+    var myName = "ching";
+    var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
+        connection.tell("/chat", "springroll.example.chat.Join", { senderName: myName });
+    });
 
     new Vue({
         el: '#app',
@@ -82,11 +82,14 @@
         data: {
             message: '',
             messages: [],
-            members: {}
+            members: []
         },
         methods: {
-            send: function () {
-                socket.emit('send', this.message);
+            send: function() {
+                connection.tell("/chat", "springroll.example.chat.Say", {
+                    senderName: myName,
+                    content: this.message
+                });
                 this.message = '';
             },
             formatMemberDate: function (date) {
@@ -97,24 +100,24 @@
             }
         },
         mounted: function () {
-            socket.on('messages', function (message) {
-                this.messages.push(message);
+            connection.on('springroll.example.chat.ChatterSaid', function(message) {
+                this.messages.push({
+                    message: message.content,
+                    username: message.chatterName,
+                    date: new Date()
+                });
             }.bind(this));
 
-            socket.on('member_add', function (member) {
-                Vue.set(this.members, member.socket, member);
+            connection.on('springroll.example.chat.ChatterJoined', function(message) {
+                if(message.currentChatterNames) {
+                    this.members = message.currentChatterNames;
+                } else {
+                    Vue.set(this.members, member.newChatterName, message.newChatterName);
+                }
             }.bind(this));
 
-            socket.on('member_delete', function (socket_id) {
-                Vue.delete(this.members, socket_id);
-            }.bind(this));
-
-            socket.on('message_history', function (messages) {
-                this.messages = messages;
-            }.bind(this));
-
-            socket.on('member_history', function (members) {
-                this.members = members;
+            connection.on('springroll.example.chat.ChatterLeft', function(message) {
+                Vue.delete(this.members, message.chatterName);
             }.bind(this));
         }
     });

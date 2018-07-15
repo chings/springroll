@@ -10,9 +10,9 @@ public class SpringActorSystem implements Extension {
     private static Logger log = LoggerFactory.getLogger(SpringActorSystem.class);
 
     ApplicationContext applicationContext;
-    ActorSystem actorSystem;
+    ExtendedActorSystem actorSystem;
 
-    public SpringActorSystem(ApplicationContext applicationContext, ActorSystem actorSystem) {
+    public SpringActorSystem(ApplicationContext applicationContext, ExtendedActorSystem actorSystem) {
         this.applicationContext = applicationContext;
         this.actorSystem = actorSystem;
     }
@@ -44,7 +44,6 @@ public class SpringActorSystem implements Extension {
     public ActorRef spawn(Class<? extends Actor> actorClass, Object... args) {
         return actorSystem.actorOf(Props.create(actorClass, args), actorClass.getSimpleName());
     }
-
 
     public ActorRef resolve(String actorPath) {
         return actorSystem.provider().resolveActorRef(actorPath);

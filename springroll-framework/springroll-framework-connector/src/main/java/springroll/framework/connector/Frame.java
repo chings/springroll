@@ -36,7 +36,7 @@ public class Frame {
     }
 
     public String getUri() {
-        return null;
+        return uri;
     }
 
     public void setUri(String uri) {

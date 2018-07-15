@@ -11,11 +11,9 @@ public interface ActorRegistry {
     void unregister(ActorRef ref);
 
     ActorRef resovle(String shortPath);
-
     List<ActorRef> resolveAll(String shortPath);
 
     ActorSelection select(String shortPath);
-
     List<ActorSelection> selectAll(String shortPath);
 
 }
