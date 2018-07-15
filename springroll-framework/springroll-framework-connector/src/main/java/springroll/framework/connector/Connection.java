@@ -3,18 +3,23 @@ package springroll.framework.connector;
 import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import reactor.util.function.Tuple2;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
+import springroll.framework.core.ActorRegistry;
+import springroll.framework.core.Actors;
 import springroll.framework.core.GenericActor;
 import springroll.framework.core.annotation.At;
 import springroll.framework.protocol.JoinMessage;
 import springroll.framework.protocol.UnjoinMessage;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
+
+import static springroll.framework.connector.Frame.Method;
 
 public class Connection extends GenericActor {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
@@ -22,9 +27,15 @@ public class Connection extends GenericActor {
     public static final String CONNECTING = At.BEGINNING;
     public static final String CONNECTED = "CONNECTED";
 
+    @Autowired
+    ActorRegistry actorRegistry;
+
+    @Autowired
+    FrameProtocol frameProtocol;
+
     String principalName;
-    Flux<Tuple2<ActorRef, Object>> source;
-    FluxSink<Object> sink;
+    Flux<Frame> source;
+    FluxSink<Frame> sink;
 
     Set<ActorRef> joinedActors = new HashSet<>();
 
@@ -38,17 +49,60 @@ public class Connection extends GenericActor {
 
     @At(CONNECTED)
     public void on(Object message, ActorRef from) {
-        sink.next(message);
-        if(message instanceof JoinMessage) joinedActors.add(from);
-        else if(message instanceof UnjoinMessage) joinedActors.remove(from);
+        Frame frame = frameProtocol.marshal(message);
+        frame.setMethod(Method.TELL);
+        frame.setUri(Actors.shortPath(from));
+        sink.next(frame);
+        postOutgo(message, from);
     }
 
-    public void onNext(Tuple2<ActorRef, Object> tuple2) {
-        ActorRef to = tuple2.getT1();
-        Object message = tuple2.getT2();
-        tell(to, message);
-        if(message instanceof JoinMessage) joinedActors.add(to);
-        else if(message instanceof UnjoinMessage) joinedActors.remove(to);
+    public void onNext(Frame frame) {
+        switch(frame.getMethod()) {
+            case PING:
+                sink.next(new Frame(Method.PONG));
+                break;
+            case PONG:
+                sink.next(new Frame(Method.PING));
+                break;
+            case TELL:
+                ActorRef to = actorRegistry.resovle(frame.getUri());
+                Object message = frameProtocol.unmarshal(frame);
+                preIncome(to, message);
+                tell(to, message);
+                break;
+            case ASK:
+                to = actorRegistry.resovle(frame.getUri());
+                message = frameProtocol.unmarshal(frame);
+                preIncome(to, message);
+                ask(to, message, reply -> {
+                    if(reply instanceof Throwable) {
+                        Frame errorFrame = new Frame(Method.ERROR);
+                        sink.next(errorFrame);
+                    } else {
+                        Frame replyFrame = frameProtocol.marshal(reply);
+                        replyFrame.setMethod(Method.REPLY);
+                        replyFrame.setUri(frame.getUri());
+                        replyFrame.setReSerialNo(frame.getSerialNo());
+                        sink.next(replyFrame);
+                        postOutgo(message, to);
+                    }
+                });
+                break;
+            case DISCONNECT:
+                sink.complete();
+        }
+    }
+
+    public void preIncome(ActorRef to, Object message) {
+        if(message instanceof JoinMessage) {
+            joinedActors.add(to);
+        } else if(message instanceof UnjoinMessage) {
+            joinedActors.remove(to);
+        }
+    }
+
+    public void postOutgo(Object message, ActorRef from) {
+        preIncome(from, message);
     }
 
     public void onError(Throwable x) {
@@ -62,7 +116,7 @@ public class Connection extends GenericActor {
         terminate();
     }
 
-    public void notifyDisconnected(String reason) {
+    public void notifyDisconnected(@Nullable String reason) {
         Disconnected disconnected = new Disconnected(principalName, reason);
         tell(getContext().getParent(), disconnected);
         for(ActorRef actor : joinedActors) {

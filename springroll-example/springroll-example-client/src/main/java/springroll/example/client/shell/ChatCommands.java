@@ -1,7 +1,6 @@
 package springroll.example.client.shell;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +11,9 @@ import springroll.example.chat.Chatter;
 import springroll.example.chat.Leave;
 import springroll.example.chat.Say;
 import springroll.example.chat.ToJoin;
+import springroll.framework.core.SpringActorSystem;
 import springroll.framework.core.annotation.ActorReference;
 
-import static springroll.framework.core.Actors.spawn;
 import static springroll.framework.core.Actors.tell;
 
 @ShellComponent
@@ -24,7 +23,7 @@ public class ChatCommands {
     public static final String DEFAULT_NAME = "Anonymous";
 
     @Autowired
-    ActorSystem actorSystem;
+    SpringActorSystem springActorSystem;
 
     @ActorReference("Chat")
     ActorRef chat;
@@ -33,7 +32,7 @@ public class ChatCommands {
 
     @ShellMethod("Join the chat")
     public void join(@ShellOption(defaultValue = DEFAULT_NAME) String name) {
-        chatter = spawn(actorSystem, Chatter.class);
+        chatter = springActorSystem.spawn(Chatter.class);
         tell(chatter, new ToJoin(chat, name));
     }
 

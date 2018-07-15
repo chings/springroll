@@ -10,8 +10,10 @@ import java.lang.annotation.*;
 @Documented
 public @interface ActorBean {
 
-    Class<? extends Actor> value();
+    String value() default "";
 
-    String name() default "";
+    Class<? extends Actor> actorClass() default Actor.class;
+
+    String beanName() default "";
 
 }

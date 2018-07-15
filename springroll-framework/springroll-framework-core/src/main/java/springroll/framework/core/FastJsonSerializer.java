@@ -63,7 +63,7 @@ public class FastJsonSerializer extends SerializerWithStringManifest {
             JSONLexer lexer = defaultJSONParser.getLexer();
             String value = lexer.stringVal();
             lexer.nextToken();
-            return (T)Actors.resolve(actorSystem, value);
+            return (T)actorSystem.provider().resolveActorRef(value);
         }
         @Override
         public int getFastMatchToken() {

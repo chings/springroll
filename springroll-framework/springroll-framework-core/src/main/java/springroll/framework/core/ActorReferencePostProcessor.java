@@ -32,7 +32,7 @@ public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
                 throw new NotWritablePropertyException(bean.getClass(), field.getName(), "only ActorSelection/ActorRef can be injected by @ActorReference");
             String shortPath = actorReference.value();
             if(!shortPath.startsWith("/user")) shortPath = shortPath.startsWith("/") ? "/user" + shortPath : "/user/" + shortPath;
-            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(shortPath) : actorRegistry.get(shortPath);
+            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(shortPath) : actorRegistry.resovle(shortPath);
             if(value == null) throw new NoSuchBeanDefinitionException(shortPath);
             if(!field.isAccessible()) field.setAccessible(true);
             field.set(bean, value);

@@ -14,10 +14,7 @@ import springroll.framework.core.annotation.On;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 import static springroll.framework.core.Actors.SECONDLY;
 
@@ -118,12 +115,20 @@ public class GenericActor extends AbstractActor {
         log.warn("unhandled: {}", message);
     }
 
+    public ActorRef spawn(String name, Props props) {
+        return getContext().actorOf(props, name);
+    }
+
+    public ActorRef spawn(Props props) {
+        return getContext().actorOf(props);
+    }
+
     public ActorRef spawn(String name, Class<? extends Actor> childActorClass, Object... args) {
         return getContext().actorOf(Props.create(childActorClass, args), name);
     }
 
     public ActorRef spawn(Class<? extends Actor> childActorClass, Object... args) {
-        return spawn(childActorClass.getSimpleName(), childActorClass, args);
+        return getContext().actorOf(Props.create(childActorClass, args), childActorClass.getSimpleName());
     }
 
     public void become(String state) {
@@ -139,22 +144,20 @@ public class GenericActor extends AbstractActor {
         actor.tell(message, getSelf());
     }
 
-    public Object ask(ActorRef actor, Object message) {
-        try {
-            CompletionStage<Object> completionStage = FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)));
-            return completionStage.toCompletableFuture().get(1, TimeUnit.SECONDS);
-        } catch(InterruptedException | ExecutionException | TimeoutException x) {
-            return x;
-        }
+    public void ask(ActorRef actor, Object message, Consumer<Object> consumer) {
+        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)))
+                .handle((reply, error) -> {
+                    consumer.accept(reply != null ? reply : error);
+                    return null;
+                });
     }
 
-    public Object ask(ActorSelection actor, Object message) {
-        try {
-            CompletionStage<Object> completionStage = FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)));
-            return completionStage.toCompletableFuture().get(1, TimeUnit.SECONDS);
-        } catch(InterruptedException | ExecutionException | TimeoutException x) {
-            return x;
-        }
+    public void ask(ActorSelection actor, Object message, Consumer<Object> consumer) {
+        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)))
+                .handle((reply, error) -> {
+                    consumer.accept(reply != null ? reply : error);
+                    return null;
+                });
     }
 
     public void reply(Object message) {

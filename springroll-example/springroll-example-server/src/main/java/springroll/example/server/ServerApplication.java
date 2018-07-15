@@ -20,7 +20,7 @@ import springroll.framework.core.annotation.EnableActorSystem;
 public class ServerApplication {
     private static Logger log = LoggerFactory.getLogger(ServerApplication.class);
 
-    @ActorBean(Chat.class)
+    @ActorBean(actorClass = Chat.class)
     ActorRef chat;
 
     @Value("${application.name}")

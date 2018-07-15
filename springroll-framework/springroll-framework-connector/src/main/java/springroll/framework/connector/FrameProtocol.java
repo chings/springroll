@@ -1,7 +1,5 @@
 package springroll.framework.connector;
 
-import java.io.Reader;
-
 public interface FrameProtocol {
 
     Frame marshal(Object message);

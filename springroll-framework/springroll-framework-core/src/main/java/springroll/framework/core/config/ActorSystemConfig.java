@@ -18,6 +18,11 @@ public class ActorSystemConfig {
         return ActorSystem.create();
     }
 
+    @Bean
+    SpringActorSystemFactory springActorSystem() {
+        return new SpringActorSystemFactory();
+    }
+
     @ConditionalOnProperty("springroll.coordinator.zk.connectionString")
     @Bean
     @ConfigurationProperties(prefix = "springroll.coordinator.zk")

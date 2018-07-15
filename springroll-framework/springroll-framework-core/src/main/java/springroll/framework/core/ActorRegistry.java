@@ -10,9 +10,9 @@ public interface ActorRegistry {
     void register(ActorRef ref);
     void unregister(ActorRef ref);
 
-    ActorRef get(String shortPath);
+    ActorRef resovle(String shortPath);
 
-    List<ActorRef> getAll(String shortPath);
+    List<ActorRef> resolveAll(String shortPath);
 
     ActorSelection select(String shortPath);
 
