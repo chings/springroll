@@ -71,7 +71,7 @@
 
 <script>
     var chatUri = "/Chat";
-    var myNickname = randomString(6);
+    var myNickname = randomString(5);
     var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
         connection.tell(chatUri, "Join", {
             senderName: myNickname
@@ -109,8 +109,8 @@
         mounted: function () {
             connection.on('NotJoined', function (message) {
                 if (console) console.warn("NotJoined, try another nickname", message)
-                myNickname = randomString(6);
-                connection.tell(chatUri, "springroll.example.chat.Join", {
+                myNickname = randomString(5);
+                connection.tell(chatUri, "Join", {
                     senderName: myNickname
                 });
             }.bind(this));
