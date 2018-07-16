@@ -44,7 +44,7 @@ public class Connection extends GenericActor {
         principalName = connected.getPrincipalName();
         source = connected.getSource();
         sink = connected.getSink();
-        source.subscribe(this::onNext, this::onError, this::onComplete);
+        source.subscribe(this::handleNext, this::handleError, this::handleComplete);
         return CONNECTED;
     }
 
@@ -57,7 +57,7 @@ public class Connection extends GenericActor {
         postOutgo(message, from);
     }
 
-    public void onNext(Frame frame) {
+    public void handleNext(Frame frame) {
         switch(frame.getMethod()) {
             case PING:
                 Frame pongFrame = new Frame(Method.PONG);
@@ -109,13 +109,13 @@ public class Connection extends GenericActor {
         preIncome(from, message);
     }
 
-    public void onError(Throwable x) {
+    public void handleError(Throwable x) {
         log.error("Ugh! {}", x.getMessage(), x);
         notifyDisconnected(x.getMessage());
         terminate();
     }
 
-    public void onComplete() {
+    public void handleComplete() {
         notifyDisconnected(null);
         terminate();
     }

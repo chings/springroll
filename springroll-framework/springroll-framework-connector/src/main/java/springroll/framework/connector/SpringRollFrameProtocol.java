@@ -33,8 +33,8 @@ import java.util.Map;
  *
  * {content:"Welcome!"}
  */
-public class HttpLikeFrameProtocol implements FrameProtocol {
-    private static Logger log = LoggerFactory.getLogger(HttpLikeFrameProtocol.class);
+public class SpringRollFrameProtocol implements FrameProtocol {
+    private static Logger log = LoggerFactory.getLogger(SpringRollFrameProtocol.class);
 
     public static final String CRLF = "\r\n";
 

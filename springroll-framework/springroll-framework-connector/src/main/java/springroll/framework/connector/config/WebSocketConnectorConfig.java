@@ -16,7 +16,7 @@ public class WebSocketConnectorConfig {
 
     @Bean
     public FrameProtocol frameProtocol() {
-        return new HttpLikeFrameProtocol();
+        return new SpringRollFrameProtocol();
     }
 
     @Bean("connections")

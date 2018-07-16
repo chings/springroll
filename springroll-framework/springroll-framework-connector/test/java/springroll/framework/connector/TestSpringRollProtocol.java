@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(JUnit4.class)
-public class TestHttpLikeFrameProtocol {
-    private static Logger log = LoggerFactory.getLogger(TestHttpLikeFrameProtocol.class);
+public class TestSpringRollProtocol {
+    private static Logger log = LoggerFactory.getLogger(TestSpringRollProtocol.class);
 
-    HttpLikeFrameProtocol httpLikeFrameProtocol = new HttpLikeFrameProtocol();
+    SpringRollFrameProtocol springRollFrameProtocol = new SpringRollFrameProtocol();
 
     String sample = "ASK /chats/80\r\n" +
             "Serial-No: 1\r\n" +
@@ -22,9 +22,9 @@ public class TestHttpLikeFrameProtocol {
 
     @Test
     public void test1() {
-        Frame frame = httpLikeFrameProtocol.unseralize(sample);
+        Frame frame = springRollFrameProtocol.unseralize(sample);
         log.info(frame.toString());
-        String s = httpLikeFrameProtocol.serialize(frame);
+        String s = springRollFrameProtocol.serialize(frame);
         log.info(s);
     }
 

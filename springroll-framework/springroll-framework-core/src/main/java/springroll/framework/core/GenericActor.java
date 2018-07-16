@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import scala.compat.java8.FutureConverters;
 import springroll.framework.core.annotation.At;
+import springroll.framework.core.annotation.NotOn;
 import springroll.framework.core.annotation.On;
 
 import java.lang.reflect.Method;
@@ -27,6 +28,7 @@ public class GenericActor extends AbstractActor {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = new HashMap<>();
             ReflectionUtils.doWithMethods(actorClazz, method -> {
+                if(method.getAnnotation(NotOn.class) != null) return;
                 On on = method.getAnnotation(On.class);
                 if(on == null && !method.getName().startsWith("on")) return;
                 Class<?> messageType = null;

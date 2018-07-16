@@ -71,15 +71,15 @@
 
 <script>
     var chatUri = "/Chat";
-    var myName = randomString(6);
+    var myNickname = randomString(6);
     var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
         connection.tell(chatUri, "springroll.example.chat.Join", {
-            senderName: myName
+            senderName: myNickname
         });
     });
     window.onbeforeunload = function () {
         connection.tell(chatUri, "springroll.example.chat.Leave", {
-            senderName: myName
+            senderName: myNickname
         });
     }
 
@@ -94,7 +94,7 @@
         methods: {
             send: function() {
                 connection.tell(chatUri, "springroll.example.chat.Say", {
-                    senderName: myName,
+                    senderName: myNickname,
                     content: this.message
                 });
                 this.message = '';
@@ -107,6 +107,13 @@
             }
         },
         mounted: function () {
+            connection.on('springroll.example.chat.NotJoined', function (message) {
+                if (console) console.warn("NotJoined, try another nickname", message)
+                myNickname = randomString(6);
+                connection.tell(chatUri, "springroll.example.chat.Join", {
+                    senderName: myNickname
+                });
+            }.bind(this));
             connection.on('springroll.example.chat.ChatterSaid', function(message) {
                 this.messages.push({
                     message: message.content,
@@ -114,7 +121,6 @@
                     date: new Date()
                 });
             }.bind(this));
-
             connection.on('springroll.example.chat.ChatterJoined', function(message) {
                 if(message.currentChatterNames) {
                     var members = {};
@@ -132,7 +138,6 @@
                     });
                 }
             }.bind(this));
-
             connection.on('springroll.example.chat.ChatterLeft', function(message) {
                 Vue.delete(this.members, message.chatterName);
             }.bind(this));

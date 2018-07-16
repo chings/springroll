@@ -16,6 +16,8 @@ import springroll.framework.core.annotation.ActorBean;
 
 import java.rmi.server.UID;
 import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
 
 import static springroll.framework.core.Actors.tell;
 
@@ -43,6 +45,11 @@ public class WebSocketConnector implements WebSocketHandler {
 
         tell(connectionMaster, new Connected(new UID().toString(), source, sink));
         return session.send(processor.map(frameProtocol::serialize).map(session::textMessage));
+    }
+
+    @Override
+    public List<String> getSubProtocols() {
+        return Collections.singletonList("SpringRoll");
     }
 
 }
