@@ -6,12 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
-import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 import springroll.framework.connector.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
 @Configuration
 public class WebSocketConnectorConfig {
@@ -38,16 +36,15 @@ public class WebSocketConnectorConfig {
         return new WebSocketConnector();
     }
 
-    @Value("${springroll.connector.path:/roll}")
-    String path;
+    @Value("${springroll.connector.endpoint:/roll}")
+    String endpoint;
 
     @Bean
     public HandlerMapping webSocketMapping() {
-        Map<String, WebSocketHandler> map = new HashMap<>();
-        map.put(path, websocketConnector());
-        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
-        mapping.setUrlMap(map);
-        return mapping;
+        SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
+        handlerMapping.setUrlMap(Collections.singletonMap(endpoint, websocketConnector()));
+        handlerMapping.setOrder(10);    // must > 0, or... you can try
+        return handlerMapping;
     }
 
     @Bean

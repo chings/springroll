@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static springroll.framework.core.Actors.shortPath;
+import static springroll.framework.core.Actors.userPath;
 
 public class CoordinatedActorRegistry implements ActorRegistry {
     private static Logger log = LoggerFactory.getLogger(CoordinatedActorRegistry.class);
@@ -104,7 +105,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
-    public synchronized ActorRef resovle(String shortPath) {
+    public synchronized ActorRef resovle(String path) {
+        String shortPath = userPath(path);
         Registration registration = localActors.getOne(shortPath, localElector);
         if(registration != null) return registration.getActorRef();
         if(coordinator != null) {
@@ -115,7 +117,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
-    public synchronized List<ActorRef> resolveAll(String shortPath) {
+    public synchronized List<ActorRef> resolveAll(String path) {
+        String shortPath = userPath(path);
         List<ActorRef> result = new ArrayList<>();
         result.addAll(localActors.get(shortPath).stream()
                 .map(registration -> registration.getActorRef())
@@ -130,7 +133,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
-    public synchronized ActorSelection select(String shortPath) {
+    public synchronized ActorSelection select(String path) {
+        String shortPath = userPath(path);
         Registration registration = localActors.getOne(shortPath, localElector);
         if(registration != null) return registration.getActorSelection();
         if(coordinator != null) {
@@ -141,7 +145,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
-    public synchronized List<ActorSelection> selectAll(String shortPath) {
+    public synchronized List<ActorSelection> selectAll(String path) {
+        String shortPath = userPath(path);
         List<ActorSelection> result = new ArrayList<>();
         result.addAll(localActors.get(shortPath).stream()
                 .map(registration -> registration.getActorSelection())

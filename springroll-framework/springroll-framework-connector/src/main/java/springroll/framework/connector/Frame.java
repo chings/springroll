@@ -28,7 +28,7 @@ public class Frame {
     }
 
     public Method getMethod() {
-        return null;
+        return method;
     }
 
     public void setMethod(Method method) {

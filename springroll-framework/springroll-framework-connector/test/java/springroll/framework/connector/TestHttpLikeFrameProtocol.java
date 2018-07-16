@@ -5,7 +5,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import springroll.framework.TestFlux;
 
 @RunWith(JUnit4.class)
 public class TestHttpLikeFrameProtocol {

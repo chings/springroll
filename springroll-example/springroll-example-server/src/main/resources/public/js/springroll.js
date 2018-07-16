@@ -18,7 +18,7 @@
  *
  * {content:"Welcome!"}
  */
-var SpringRollConnection = function(url, start) {
+var SpringRollConnection = function (url, onOpen, onError, onClose) {
 
     var lastSerialNo= 0;
     var handlers = {};
@@ -55,10 +55,19 @@ var SpringRollConnection = function(url, start) {
 
     var webSocket = new WebSocket(url);
     webSocket.onopen = function(event) {
-        if(console) console.info("WebSocket connected")
-        if(start) start();
+        if (console) console.info("WebSocket connected");
+        if (onOpen) onOpen(event);
+    };
+    webSocket.onerror = function (event) {
+        if (console) console.error("WebSocket error", event);
+        if (onError) onError(event);
+    };
+    webSocket.onclose = function (event) {
+        if (console) console.info("WebSocket closed");
+        if (onClose) onClose(event);
     };
     webSocket.onmessage = function(event) {
+        if (console) console.debug("<<", event.data);
         var frame = unserialize(event.data);
         switch(frame.method) {
             case "TELL":
@@ -81,31 +90,39 @@ var SpringRollConnection = function(url, start) {
                 if(console) console.error("unrecognized frame", frame);
         }
     };
-    webSocket.onerror = function(event) {
-        if(console) console.error("WebSocket error", event);
-    };
-    webSocket.onclose = function(event) {
-        if(console) console.info("WebSocket closed");
-    };
 
     return {
         "on": function(type, handler) {
             handlers[type] = handler;
         },
         "tell": function(to, contentClass, content) {
-            webSocket.send(serialize("TELL", to, {
+            var packet = serialize("TELL", to, {
                 "Serial-No": ++lastSerialNo,
                 "Content-Class": contentClass
-            }, content));
+            }, content);
+            if (console) console.debug(">>", packet);
+            webSocket.send(packet);
         },
         "ask": function(to, contentClass, content, handler) {
             var serialNo = ++lastSerialNo;
             asks[serialNo] = handler;
-            webSocket.send(serialize("ASK", to, {
+            var packet = serialize("ASK", to, {
                 "Serial-No": serialNo,
                 "Content-Class": contentClass
-            }, content));
+            }, content);
+            if (console) console.debug(">>", packet);
+            webSocket.send(packet);
         }
     };
 
+};
+
+var randomString = function (len, charSet) {
+    charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var randomString = '';
+    for (var i = 0; i < len; i++) {
+        var randomPoz = Math.floor(Math.random() * charSet.length);
+        randomString += charSet.substring(randomPoz, randomPoz + 1);
+    }
+    return randomString;
 };

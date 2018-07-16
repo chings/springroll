@@ -7,6 +7,7 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ReflectionUtils;
 import scala.compat.java8.FutureConverters;
 import springroll.framework.core.annotation.At;
 import springroll.framework.core.annotation.On;
@@ -25,22 +26,22 @@ public class GenericActor extends AbstractActor {
     private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = new HashMap<>();
-            for(Method method : actorClazz.getMethods()) {
+            ReflectionUtils.doWithMethods(actorClazz, method -> {
                 On on = method.getAnnotation(On.class);
-                if(on == null && !method.getName().startsWith("on")) continue;
+                if(on == null && !method.getName().startsWith("on")) return;
                 Class<?> messageType = null;
                 if(on != null) messageType = on.value();
                 if(messageType == null || messageType == Object.class) {
                     Class<?>[] paramTypes = method.getParameterTypes();
                     for(Class<?> paramType : paramTypes) {
-                        if(paramType.isAssignableFrom(ActorRef.class)) continue;
+                        if(ActorRef.class.isAssignableFrom(paramType)) return;
                         messageType = paramType;
                         break;
                     }
                 }
                 if(messageType == null) {
                     log.warn("can not map for {}, just skipped.", method);
-                    continue;
+                    return;
                 }
                 At at = method.getAnnotation(At.class);
                 String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
@@ -49,7 +50,7 @@ public class GenericActor extends AbstractActor {
                     if(!method.isAccessible()) method.setAccessible(true);
                     stateBehaviors.put(messageType, method);
                 }
-            }
+            });
             return result;
         });
     }

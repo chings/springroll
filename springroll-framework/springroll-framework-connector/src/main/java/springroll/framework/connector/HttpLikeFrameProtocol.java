@@ -59,7 +59,7 @@ public class HttpLikeFrameProtocol implements FrameProtocol {
     public String serialize(Frame frame) {
         StringWriter out = new StringWriter();
         if(StringUtils.hasText(frame.getUri())) {
-            out.write(frame.getUri());
+            out.write(noUserPrefix(frame.getUri()));
             out.write(' ');
         }
         out.write(frame.method.toString());
@@ -77,6 +77,10 @@ public class HttpLikeFrameProtocol implements FrameProtocol {
         out.write(CRLF);
         out.write(frame.getContent());
         return out.toString();
+    }
+
+    public static String noUserPrefix(String uri) {
+        return uri.startsWith("/user/") ? uri.substring(5) : uri;
     }
 
     @Override
