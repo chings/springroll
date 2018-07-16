@@ -81,6 +81,7 @@
         connection.tell(chatUri, "Leave", {
             senderName: myNickname
         });
+        connection.close();
     }
 
     new Vue({

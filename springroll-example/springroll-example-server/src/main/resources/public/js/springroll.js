@@ -112,6 +112,9 @@ var SpringRollConnection = function (url, onOpen, onError, onClose) {
             }, content);
             if (console) console.debug(">>", packet);
             webSocket.send(packet);
+        },
+        "close": function() {
+            webSocket.close();
         }
     };
 
