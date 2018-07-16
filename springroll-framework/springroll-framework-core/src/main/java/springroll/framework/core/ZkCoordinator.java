@@ -4,7 +4,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ZkCoordinator implements Coordinator, InitializingBean, DisposableBean {
@@ -41,7 +41,8 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     TreeCache cache;
 
     Map<String, String> providedActorPaths = new HashMap<>();
-    Map<TreeCacheEvent.Type, Consumer<String>> handlers = new HashMap<>();
+    List<BiConsumer<String, String>> provideListeners = new ArrayList<>();
+    List<Consumer<String>> unprovideListeners = new ArrayList<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -55,8 +56,20 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
             ChildData childData = event.getData();
             if(childData == null) return;
             if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
-            Consumer<String> handler = handlers.get(event.getType());
-            if(handler != null) handler.accept(new String(event.getData().getData(), DEFAULT_CHARSET));
+            switch(event.getType()) {
+                case NODE_ADDED:
+                    String[] tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+                    for(BiConsumer<String, String> provideListener : provideListeners) {
+                        provideListener.accept(tuple[0], tuple[1]);
+                    }
+                    break;
+                case NODE_REMOVED:
+                    tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+                    for(Consumer<String> unprovideListener : unprovideListeners) {
+                        unprovideListener.accept(tuple[0]);
+                    }
+                    break;
+            }
         });
         cache.start();
     }
@@ -78,9 +91,12 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     }
 
     @Override
-    public void provide(String actorPath) {
+    public void provide(String actorPath, String actorClassName) {
         try {
-            String nodePath = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/" + nodeNamePrefix, actorPath.getBytes(DEFAULT_CHARSET));
+            String data = build(actorPath, actorClassName);
+            String nodePath = client.create()
+                    .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
+                    .forPath(rootPath + "/" + nodeNamePrefix, data.getBytes(DEFAULT_CHARSET));
             providedActorPaths.put(actorPath, nodePath);
         } catch(Exception x) {
             log.error("Ugh! {}", x.getMessage(), x);
@@ -111,22 +127,33 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     }
 
     @Override
-    public void listenProvide(Consumer<String> handler) {
-        handlers.put(TreeCacheEvent.Type.NODE_ADDED, handler);
+    public void listenProvide(BiConsumer<String, String> listener) {
+        provideListeners.add(listener);
     }
 
     @Override
-    public void listenUnprovide(Consumer<String> handler) {
-        handlers.put(TreeCacheEvent.Type.NODE_REMOVED, handler);
+    public void unlistenProvide(BiConsumer<String, String> listener) {
+        provideListeners.remove(listener);
     }
 
     @Override
-    public void synchronize(Consumer<List<String>> handler) {
-        List<String> actorPaths = new ArrayList<>();
+    public void listenUnprovide(Consumer<String> listener) {
+        unprovideListeners.add(listener);
+    }
+
+    @Override
+    public void unlistenUnprovide(Consumer<String> listener) {
+        unprovideListeners.remove(listener);
+    }
+
+    @Override
+    public void synchronize() {
         for(ChildData childData : cache.getCurrentChildren(rootPath).values()) {
-            actorPaths.add(new String(childData.getData(), DEFAULT_CHARSET));
+            String[] tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+            for(BiConsumer<String, String> provideListener : provideListeners) {
+                provideListener.accept(tuple[0], tuple[1]);
+            }
         }
-        handler.accept(actorPaths);
     }
 
     @Override
@@ -134,6 +161,19 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         unprovide();
         cache.close();
         client.close();
+    }
+
+    String build(String... data) {
+        StringBuilder result = new StringBuilder();
+        for(String datum : data) {
+            if(result.length() > 0) result.append('\n');
+            result.append(datum);
+        }
+        return result.toString();
+    }
+
+    String[] parse(String data) {
+        return data.split("\n");
     }
 
 }

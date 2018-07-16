@@ -73,12 +73,12 @@
     var chatUri = "/Chat";
     var myNickname = randomString(6);
     var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
-        connection.tell(chatUri, "springroll.example.chat.Join", {
+        connection.tell(chatUri, "Join", {
             senderName: myNickname
         });
     });
     window.onbeforeunload = function () {
-        connection.tell(chatUri, "springroll.example.chat.Leave", {
+        connection.tell(chatUri, "Leave", {
             senderName: myNickname
         });
     }
@@ -93,7 +93,7 @@
         },
         methods: {
             send: function() {
-                connection.tell(chatUri, "springroll.example.chat.Say", {
+                connection.tell(chatUri, "Say", {
                     senderName: myNickname,
                     content: this.message
                 });
@@ -107,21 +107,21 @@
             }
         },
         mounted: function () {
-            connection.on('springroll.example.chat.NotJoined', function (message) {
+            connection.on('NotJoined', function (message) {
                 if (console) console.warn("NotJoined, try another nickname", message)
                 myNickname = randomString(6);
                 connection.tell(chatUri, "springroll.example.chat.Join", {
                     senderName: myNickname
                 });
             }.bind(this));
-            connection.on('springroll.example.chat.ChatterSaid', function(message) {
+            connection.on('ChatterSaid', function (message) {
                 this.messages.push({
                     message: message.content,
                     username: message.chatterName,
                     date: new Date()
                 });
             }.bind(this));
-            connection.on('springroll.example.chat.ChatterJoined', function(message) {
+            connection.on('ChatterJoined', function (message) {
                 if(message.currentChatterNames) {
                     var members = {};
                     for (i = 0; i < message.currentChatterNames.length; i++) {
@@ -138,7 +138,7 @@
                     });
                 }
             }.bind(this));
-            connection.on('springroll.example.chat.ChatterLeft', function(message) {
+            connection.on('ChatterLeft', function (message) {
                 Vue.delete(this.members, message.chatterName);
             }.bind(this));
         }

@@ -50,27 +50,29 @@ public class SpringRollFrameProtocol implements FrameProtocol {
     }
 
     @Override
-    public Object unmarshal(Frame frame) {
-        Class<?> contentClass = Classes.guess(frame.getContentClass());
+    public Object unmarshal(Frame frame, String namespace) {
+        Class<?> contentClass = Classes.guess(frame.getContentClass(), namespace);
         return JSON.parseObject(frame.getContent(), contentClass);
     }
 
     @Override
     public String serialize(Frame frame) {
         StringWriter out = new StringWriter();
-        if(StringUtils.hasText(frame.getUri())) {
-            out.write(noUserPrefix(frame.getUri()));
+        String uri = trimUserPrefix(frame.getUri().trim());
+        if(StringUtils.hasText(uri)) {
+            out.write(uri);
             out.write(' ');
         }
         out.write(frame.method.toString());
         out.write(CRLF);
         for(Map.Entry<String, String> entry : frame.headers.entrySet()) {
-            String name = entry.getKey();
-            String value = entry.getValue();
+            String name = entry.getKey().trim();
+            String value = entry.getValue().trim();
+            if(Frame.CONTENT_CLASS.equals(name)) value = trimNamespace(value);
             if(StringUtils.hasText(value)) {
-                out.write(name.trim());
+                out.write(name);
                 out.write(": ");
-                out.write(value.trim());
+                out.write(value);
                 out.write(CRLF);
             }
         }
@@ -79,8 +81,13 @@ public class SpringRollFrameProtocol implements FrameProtocol {
         return out.toString();
     }
 
-    public static String noUserPrefix(String uri) {
+    public static String trimUserPrefix(String uri) {
         return uri.startsWith("/user/") ? uri.substring(5) : uri;
+    }
+
+    public static String trimNamespace(String contentClass) {
+        int n = contentClass.lastIndexOf(".");
+        return n < 0 ? contentClass : contentClass.substring(n + 1);
     }
 
     @Override

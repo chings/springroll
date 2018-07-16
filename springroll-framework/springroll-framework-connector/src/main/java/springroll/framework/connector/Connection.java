@@ -68,13 +68,15 @@ public class Connection extends GenericActor {
                 break;
             case TELL:
                 ActorRef to = actorRegistry.resovle(frame.getUri());
-                Object message = frameProtocol.unmarshal(frame);
+                String namespace = actorRegistry.askNamespace(frame.getUri());
+                Object message = frameProtocol.unmarshal(frame, namespace);
                 preIncome(to, message);
                 tell(to, message);
                 break;
             case ASK:
                 to = actorRegistry.resovle(frame.getUri());
-                message = frameProtocol.unmarshal(frame);
+                namespace = actorRegistry.askNamespace(frame.getUri());
+                message = frameProtocol.unmarshal(frame, namespace);
                 preIncome(to, message);
                 ask(to, message, reply -> {
                     if(reply instanceof Throwable) {

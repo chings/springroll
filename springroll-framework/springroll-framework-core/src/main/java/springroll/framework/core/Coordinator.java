@@ -1,17 +1,23 @@
 package springroll.framework.core;
 
-import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface Coordinator {
 
-    void provide(String actorPath);
+    void provide(String actorPath, String actorClassName);
+
     void unprovide(String actorPath);
     void unprovide();
 
-    void listenProvide(Consumer<String> handler);
-    void listenUnprovide(Consumer<String> handler);
+    void listenProvide(BiConsumer<String, String> listener);
 
-    void synchronize(Consumer<List<String>> handler);
+    void unlistenProvide(BiConsumer<String, String> listener);
+
+    void listenUnprovide(Consumer<String> listener);
+
+    void unlistenUnprovide(Consumer<String> listener);
+
+    void synchronize();
 
 }

@@ -1,5 +1,6 @@
 package springroll.framework.core;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import org.slf4j.Logger;
@@ -20,14 +21,22 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     public class Registration {
         String actorPath;
+        String actorClassName;
         ActorRef cachedActorRef;
         ActorSelection cachedActorSelection;
-        public Registration(String actorPath) {
+
+        public Registration(String actorPath, String actorClassName) {
             this.actorPath = actorPath;
+            this.actorClassName = actorClassName;
         }
         public Registration(String actorPath, ActorRef cachedActorRef) {
             this.actorPath = actorPath;
             this.cachedActorRef = cachedActorRef;
+        }
+
+        public String getNamesapce() {
+            int n = actorClassName.lastIndexOf(".");
+            return n < 0 ? "" : actorClassName.substring(0, n);
         }
         public ActorRef getActorRef() {
             if(cachedActorRef == null) cachedActorRef = springActorSystem.resolve(actorPath);
@@ -60,7 +69,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
         this.coordinator = coordinator;
         coordinator.listenProvide(this::onProvide);
         coordinator.listenUnprovide(this::onUnprovide);
-        coordinator.synchronize(this::onSynchronize);
+        remoteActors.clear();
+        coordinator.synchronize();
     }
 
     public void setLocalElector(Function<List<Registration>, Integer> localElector) {
@@ -71,17 +81,9 @@ public class CoordinatedActorRegistry implements ActorRegistry {
         this.remoteElector = remoteElector;
     }
 
-    public synchronized void onSynchronize(List<String> all) {
-        remoteActors.clear();
-        for(String actorPath : all) {
-            String shortPath = shortPath(actorPath);
-            remoteActors.add(shortPath, new Registration(actorPath));
-        }
-    }
-
-    public synchronized void onProvide(String actorPath) {
+    public synchronized void onProvide(String actorPath, String actorClassName) {
         String shortPath = shortPath(actorPath);
-        remoteActors.add(shortPath, new Registration(actorPath));
+        remoteActors.add(shortPath, new Registration(actorPath, actorClassName));
     }
 
     public synchronized void onUnprovide(String actorPath) {
@@ -89,11 +91,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     @Override
-    public synchronized void register(ActorRef ref) {
-        String actorPath = ref.path().toString();
+    public synchronized void register(ActorRef actorRef, Class<? extends Actor> actorClass) {
+        String actorPath = actorRef.path().toString();
         String shortPath = shortPath(actorPath);
-        localActors.add(shortPath, new Registration(actorPath, ref));
-        if(coordinator != null) coordinator.provide(myHost + shortPath);
+        localActors.add(shortPath, new Registration(actorPath, actorClass.getCanonicalName()));
+        if(coordinator != null) coordinator.provide(myHost + shortPath, actorClass.getCanonicalName());
     }
 
     @Override
@@ -158,6 +160,18 @@ public class CoordinatedActorRegistry implements ActorRegistry {
                     .collect(Collectors.toList()));
         }
         return result;
+    }
+
+    @Override
+    public String askNamespace(String path) {
+        String shortPath = userPath(path);
+        Registration registration = localActors.getOne(shortPath, localElector);
+        if(registration != null) return registration.getNamesapce();
+        if(coordinator != null) {
+            registration = remoteActors.getOne(shortPath, remoteElector);
+            if(registration != null) return registration.getNamesapce();
+        }
+        return null;
     }
 
 }

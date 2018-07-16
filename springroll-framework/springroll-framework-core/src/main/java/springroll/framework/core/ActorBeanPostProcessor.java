@@ -56,22 +56,22 @@ public class ActorBeanPostProcessor implements ApplicationContextAware, BeanPost
                 if(StringUtils.isEmpty(actorName)) actorName = actorBeanName;
             }
 
-            ActorRef ref = null;
+            ActorRef actorRef = null;
             if(actorClass != Actor.class) {
                 //try create directly
                 Object[] args = wireConstructorArgs(actorClass, applicationContext);
-                ref =  springActorSystem.spawn(actorName, actorClass, args);
+                actorRef = springActorSystem.spawn(actorName, actorClass, args);
             } else if(StringUtils.hasText(actorBeanName) && applicationContext.containsBean(actorBeanName)) {
                 //try create from prototype Bean
-                ref = springActorSystem.spawn(actorName, actorBeanName);
+                actorRef = springActorSystem.spawn(actorName, actorBeanName);
             }
-            if(ref == null) {
+            if(actorRef == null) {
                 throw new BeanCreationException("failed creating actor bean of " + actorClass.getCanonicalName());
             }
 
             if(!field.isAccessible()) field.setAccessible(true);
-            field.set(bean, ref);
-            actorRegistry.register(ref);
+            field.set(bean, actorRef);
+            actorRegistry.register(actorRef, actorClass);
         });
         return bean;
     }
