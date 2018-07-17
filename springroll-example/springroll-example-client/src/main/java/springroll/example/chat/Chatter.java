@@ -12,7 +12,6 @@ import java.util.List;
 
 import static springroll.framework.core.annotation.At.BEGINNING;
 
-
 public class Chatter extends GenericActor {
     private static Logger log = LoggerFactory.getLogger(Chatter.class);
 
@@ -27,7 +26,7 @@ public class Chatter extends GenericActor {
         chat = toJoin.chat;
         name = toJoin.name;
         Join join = new Join();
-        join.senderName = name;
+        join.chatterName = name;
         tell(chat, join);
     }
 
@@ -38,12 +37,12 @@ public class Chatter extends GenericActor {
 
     @At({ BEGINNING, CHATTING })
     public void on(ChatterJoined chatterJoined) {
-        if(CollectionUtils.isEmpty(chatterJoined.currentChatterNames)) {
-            coChatterNames.add(chatterJoined.newChatterName);
-            log.info("{} Joined：{}", chatterJoined.newChatterName, coChatterNames);
+        if(CollectionUtils.isEmpty(chatterJoined.allChatterNames)) {
+            coChatterNames.add(chatterJoined.chatterName);
+            log.info("{} Joined：{}", chatterJoined.chatterName, coChatterNames);
         } else {
             coChatterNames.clear();
-            coChatterNames.addAll(chatterJoined.currentChatterNames);
+            coChatterNames.addAll(chatterJoined.allChatterNames);
             log.info("Joined：{}", coChatterNames);
             become(CHATTING);
         }
@@ -51,7 +50,6 @@ public class Chatter extends GenericActor {
 
     @At(CHATTING)
     public void on(Leave leave) {
-        leave.senderName = name;
         tell(chat, leave);
         terminate();
     }
@@ -64,7 +62,6 @@ public class Chatter extends GenericActor {
 
     @At(CHATTING)
     public void on(Say say) {
-        say.senderName = name;
         tell(chat, say);
     }
 

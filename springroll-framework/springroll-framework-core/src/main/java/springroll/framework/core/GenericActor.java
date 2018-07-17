@@ -62,7 +62,7 @@ public class GenericActor extends AbstractActor {
 
     @Override
     public AbstractActor.Receive createReceive() {
-        return stateReceive(At.BEGINNING);
+        return stateReceive(currentState);
     }
 
     protected Receive stateReceive(String state) {
@@ -135,8 +135,8 @@ public class GenericActor extends AbstractActor {
     }
 
     public void become(String state) {
-        getContext().become(stateReceive(state));
         currentState = state;
+        getContext().become(stateReceive(currentState));
     }
 
     public void tell(ActorRef actor, Object message) {

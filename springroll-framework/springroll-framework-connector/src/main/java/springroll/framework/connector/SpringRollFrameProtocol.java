@@ -58,8 +58,8 @@ public class SpringRollFrameProtocol implements FrameProtocol {
     @Override
     public String serialize(Frame frame) {
         StringWriter out = new StringWriter();
-        String uri = trimUserPrefix(frame.getUri().trim());
-        if(StringUtils.hasText(uri)) {
+        if(StringUtils.hasText(frame.getUri())) {
+            String uri = trimUserPrefix(frame.getUri().trim());
             out.write(uri);
             out.write(' ');
         }
@@ -99,7 +99,7 @@ public class SpringRollFrameProtocol implements FrameProtocol {
             String[] parts = line.split(" ", 2);
             Frame.Method method = Frame.Method.valueOf(parts[0].trim());
             Frame frame = new Frame(method);
-            frame.setUri(parts[1].trim());
+            if(parts.length > 1) frame.setUri(parts[1].trim());
             while(StringUtils.hasText(line = reader.readLine())) {
                 parts = line.split(":", 2);
                 frame.setHeader(parts[0].trim(), parts[1].trim());

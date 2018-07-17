@@ -1,37 +1,33 @@
 package springroll.example.chat;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class ChatterJoined implements Serializable {
 
-    String newChatterName;
-    List<String> currentChatterNames;
+    String chatterName;
+    Collection<String> allChatterNames;
 
     public ChatterJoined() { }
 
-    public ChatterJoined(String newChatterName) {
-        this.newChatterName = newChatterName;
+    public ChatterJoined(String chatterName) {
+        this.chatterName = chatterName;
     }
 
-    public String getNewChatterName() {
-        return newChatterName;
+    public String getChatterName() {
+        return chatterName;
     }
 
-    public void setNewChatterName(String newChatterName) {
-        this.newChatterName = newChatterName;
+    public void setChatterName(String chatterName) {
+        this.chatterName = chatterName;
     }
 
-    public List<String> getCurrentChatterNames() {
-        return currentChatterNames;
+    public Collection<String> getAllChatterNames() {
+        return allChatterNames;
     }
 
-    public void setCurrentChatterNames(Collection<String> chatterNames) {
-        if(currentChatterNames == null) currentChatterNames = new ArrayList<>();
-        else currentChatterNames.clear();
-        currentChatterNames.addAll(chatterNames);
+    public void setAllChatterNames(Collection<String> allChatterNames) {
+        this.allChatterNames = allChatterNames;
     }
 
 }

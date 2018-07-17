@@ -14,32 +14,33 @@ public class Chat extends GenericActor {
     Map<ActorRef, String> chatters = new HashMap<>();
 
     public void on(Join join, ActorRef from) {
-        if(chatters.containsValue(join.senderName)) {
-            tell(from, new NotJoined("name '" + join.senderName + "' has been taken."));
+        if(chatters.containsValue(join.chatterName)) {
+            tell(from, new NotJoined("name '" + join.chatterName + "' has been taken."));
             return;
         }
-        chatters.put(from, join.senderName);
+        chatters.put(from, join.chatterName);
         chatters.forEach((to, name) -> {
-            ChatterJoined message = new ChatterJoined(join.senderName);
-            if(name.equals(join.senderName)) message.setCurrentChatterNames(chatters.values());
+            ChatterJoined message = new ChatterJoined(join.chatterName);
+            if(name.equals(join.chatterName)) message.setAllChatterNames(chatters.values());
             tell(to, message);
         });
     }
 
     public void on(Say say, ActorRef from) {
         if(!chatters.containsKey(from)) {
-            log.warn("'{}', a unjoined chatter try to say: {}", say.senderName, say.content);
+            log.warn("'{}', a unjoined chatter try to say: {}", say.content);
             return;
         }
+        String senderName = chatters.get(from);
         chatters.forEach((to, name) -> {
-            tell(to, new ChatterSaid(say.senderName, say.content));
+            tell(to, new ChatterSaid(senderName, say.content));
         });
     }
 
     public void on(Leave leave, ActorRef from) {
-        chatters.remove(from);
+        String senderName = chatters.remove(from);
         chatters.forEach((to, name) -> {
-            tell(to, new ChatterLeft(leave.senderName));
+            tell(to, new ChatterLeft(senderName));
         });
     }
 

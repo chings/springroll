@@ -6,20 +6,20 @@ import java.io.Serializable;
 
 public class Join implements JoinMessage, Serializable {
 
-    String senderName;
+    String chatterName;
 
     public Join() { }
 
-    public Join(String senderName) {
-        this.senderName = senderName;
+    public Join(String chatterName) {
+        this.chatterName = chatterName;
     }
 
-    public String getSenderName() {
-        return senderName;
+    public String getChatterName() {
+        return chatterName;
     }
 
-    public void setSenderName(String senderName) {
-        this.senderName = senderName;
+    public void setChatterName(String chatterName) {
+        this.chatterName = chatterName;
     }
 
 }

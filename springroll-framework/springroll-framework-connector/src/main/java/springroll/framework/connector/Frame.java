@@ -3,7 +3,6 @@ package springroll.framework.connector;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class Frame {
 
     enum Method {
@@ -71,8 +70,8 @@ public class Frame {
         return headers.get(RE_SERIAL_NO);
     }
 
-    public void setReSerialNo(String serialNo) {
-        headers.put(SERIAL_NO, RE_SERIAL_NO);
+    public void setReSerialNo(String reSerialNo) {
+        headers.put(RE_SERIAL_NO, reSerialNo);
     }
 
     public String getContentType() {

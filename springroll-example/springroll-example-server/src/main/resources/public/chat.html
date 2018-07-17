@@ -84,13 +84,11 @@
     var myScreenName = randomString(5);
     var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
         connection.tell(chatUri, "Join", {
-            senderName: myScreenName
+            chatterName: myScreenName
         });
-    });
+    }, null, null, 30000);
     window.onbeforeunload = function () {
-        connection.tell(chatUri, "Leave", {
-            senderName: myScreenName
-        });
+        connection.tell(chatUri, "Leave", {});
         connection.close();
     };
 
@@ -100,12 +98,12 @@
         data: {
             message: '',
             messages: [],
-            members: {}
+            members: {},
+            latency: 0 + "ms"
         },
         methods: {
             send: function() {
                 connection.tell(chatUri, "Say", {
-                    senderName: myScreenName,
                     content: this.message
                 });
                 this.message = '';
@@ -122,29 +120,29 @@
                 if (console) console.warn("NotJoined, try another screenName", message);
                 myScreenName = randomString(5);
                 connection.tell(chatUri, "Join", {
-                    senderName: myScreenName
+                    chatterName: myScreenName
                 });
             }.bind(this));
             connection.on('ChatterSaid', function (message) {
                 this.messages.push({
-                    message: message.content,
                     username: message.chatterName,
+                    message: message.content,
                     date: new Date()
                 });
             }.bind(this));
             connection.on('ChatterJoined', function (message) {
-                if(message.currentChatterNames) {
+                if (message.allChatterNames) {
                     var members = {};
-                    for (i = 0; i < message.currentChatterNames.length; i++) {
-                        members[message.currentChatterNames[i]] = {
-                            username: message.currentChatterNames[i],
+                    for (i = 0; i < message.allChatterNames.length; i++) {
+                        members[message.allChatterNames[i]] = {
+                            username: message.allChatterNames[i],
                             avatar: "images/avatar.png"
                         }
                     }
                     this.members = members;
                 } else {
-                    Vue.set(this.members, message.newChatterName, {
-                        username: message.newChatterName,
+                    Vue.set(this.members, message.chatterName, {
+                        username: message.chatterName,
                         avatar: "images/avatar.png"
                     });
                 }
