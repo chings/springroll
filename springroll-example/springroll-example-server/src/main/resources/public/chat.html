@@ -70,19 +70,29 @@
 <script src="js/springroll.js"></script>
 
 <script>
+    function randomString(len, charSet) {
+        charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var randomString = '';
+        for (var i = 0; i < len; i++) {
+            var randomPoz = Math.floor(Math.random() * charSet.length);
+            randomString += charSet.substring(randomPoz, randomPoz + 1);
+        }
+        return randomString;
+    }
+
     var chatUri = "/Chat";
-    var myNickname = randomString(5);
+    var myScreenName = randomString(5);
     var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
         connection.tell(chatUri, "Join", {
-            senderName: myNickname
+            senderName: myScreenName
         });
     });
     window.onbeforeunload = function () {
         connection.tell(chatUri, "Leave", {
-            senderName: myNickname
+            senderName: myScreenName
         });
         connection.close();
-    }
+    };
 
     new Vue({
         el: '#app',
@@ -95,7 +105,7 @@
         methods: {
             send: function() {
                 connection.tell(chatUri, "Say", {
-                    senderName: myNickname,
+                    senderName: myScreenName,
                     content: this.message
                 });
                 this.message = '';
@@ -109,10 +119,10 @@
         },
         mounted: function () {
             connection.on('NotJoined', function (message) {
-                if (console) console.warn("NotJoined, try another nickname", message)
-                myNickname = randomString(5);
+                if (console) console.warn("NotJoined, try another screenName", message);
+                myScreenName = randomString(5);
                 connection.tell(chatUri, "Join", {
-                    senderName: myNickname
+                    senderName: myScreenName
                 });
             }.bind(this));
             connection.on('ChatterSaid', function (message) {
