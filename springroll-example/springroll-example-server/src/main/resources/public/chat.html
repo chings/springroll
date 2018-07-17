@@ -73,7 +73,7 @@
     function randomString(len, charSet) {
         charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         var randomString = '';
-        for (var i = 0; i < len; i++) {
+        for(var i = 0; i < len; i++) {
             var randomPoz = Math.floor(Math.random() * charSet.length);
             randomString += charSet.substring(randomPoz, randomPoz + 1);
         }
@@ -87,7 +87,7 @@
             chatterName: myScreenName
         });
     }, null, null, 30000);
-    window.onbeforeunload = function () {
+    window.onbeforeunload = function() {
         connection.tell(chatUri, "Leave", {});
         connection.close();
     };
@@ -108,46 +108,45 @@
                 });
                 this.message = '';
             },
-            formatMemberDate: function (date) {
+            formatMemberDate: function(date) {
                 return moment(date).format("h:mm:ss a");
             },
-            formatMessageDate: function (date) {
+            formatMessageDate: function(date) {
                 return moment(date).format("h:mm:ss a");
             }
         },
-        mounted: function () {
-            connection.on('NotJoined', function (message) {
+        mounted: function() {
+            connection.on('Joined', function(message) {
+                var members = {};
+                for(var i = 0; i < message.allChatterNames.length; i++) {
+                    members[message.allChatterNames[i]] = {
+                        username: message.allChatterNames[i],
+                        avatar: "images/avatar.png"
+                    }
+                }
+                this.members = members;
+            }.bind(this));
+            connection.on('NotJoined', function(message) {
                 if (console) console.warn("NotJoined, try another screenName", message);
                 myScreenName = randomString(5);
                 connection.tell(chatUri, "Join", {
                     chatterName: myScreenName
                 });
             }.bind(this));
-            connection.on('ChatterSaid', function (message) {
+            connection.on('ChatterJoined', function(message) {
+                Vue.set(this.members, message.chatterName, {
+                    username: message.chatterName,
+                    avatar: "images/avatar.png"
+                });
+            }.bind(this));
+            connection.on('ChatterSaid', function(message) {
                 this.messages.push({
                     username: message.chatterName,
                     message: message.content,
                     date: new Date()
                 });
             }.bind(this));
-            connection.on('ChatterJoined', function (message) {
-                if (message.allChatterNames) {
-                    var members = {};
-                    for (i = 0; i < message.allChatterNames.length; i++) {
-                        members[message.allChatterNames[i]] = {
-                            username: message.allChatterNames[i],
-                            avatar: "images/avatar.png"
-                        }
-                    }
-                    this.members = members;
-                } else {
-                    Vue.set(this.members, message.chatterName, {
-                        username: message.chatterName,
-                        avatar: "images/avatar.png"
-                    });
-                }
-            }.bind(this));
-            connection.on('ChatterLeft', function (message) {
+            connection.on('ChatterLeft', function(message) {
                 Vue.delete(this.members, message.chatterName);
             }.bind(this));
         }

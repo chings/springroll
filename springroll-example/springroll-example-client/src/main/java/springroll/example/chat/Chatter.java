@@ -3,7 +3,6 @@ package springroll.example.chat;
 import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 import springroll.framework.core.GenericActor;
 import springroll.framework.core.annotation.At;
 
@@ -31,21 +30,22 @@ public class Chatter extends GenericActor {
     }
 
     @At(BEGINNING)
+    public void on(Joined joined) {
+        coChatterNames.clear();
+        coChatterNames.addAll(joined.allChatterNames);
+        log.info("Joined：{}", coChatterNames);
+        become(CHATTING);
+    }
+
+    @At(BEGINNING)
     public void on(NotJoined notJoined) {
         log.warn("NotJoined：{}", notJoined.getReason());
     }
 
-    @At({ BEGINNING, CHATTING })
+    @At(CHATTING)
     public void on(ChatterJoined chatterJoined) {
-        if(CollectionUtils.isEmpty(chatterJoined.allChatterNames)) {
-            coChatterNames.add(chatterJoined.chatterName);
-            log.info("{} Joined：{}", chatterJoined.chatterName, coChatterNames);
-        } else {
-            coChatterNames.clear();
-            coChatterNames.addAll(chatterJoined.allChatterNames);
-            log.info("Joined：{}", coChatterNames);
-            become(CHATTING);
-        }
+        coChatterNames.add(chatterJoined.chatterName);
+        log.info("{} Joined：{}", chatterJoined.chatterName, coChatterNames);
     }
 
     @At(CHATTING)

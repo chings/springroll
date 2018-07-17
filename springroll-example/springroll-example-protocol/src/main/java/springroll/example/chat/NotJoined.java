@@ -1,6 +1,10 @@
 package springroll.example.chat;
 
-public class NotJoined {
+import springroll.framework.protocol.UnjoinMessage;
+
+import java.io.Serializable;
+
+public class NotJoined implements UnjoinMessage, Serializable {
 
     String reason;
 

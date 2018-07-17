@@ -20,9 +20,11 @@ public class Chat extends GenericActor {
         }
         chatters.put(from, join.chatterName);
         chatters.forEach((to, name) -> {
-            ChatterJoined message = new ChatterJoined(join.chatterName);
-            if(name.equals(join.chatterName)) message.setAllChatterNames(chatters.values());
-            tell(to, message);
+            if(name.equals(join.chatterName)) {
+                tell(to, new Joined(chatters.values()));
+            } else {
+                tell(to, new ChatterJoined(join.chatterName));
+            }
         });
     }
 

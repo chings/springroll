@@ -7,7 +7,6 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ReflectionUtils;
 import scala.compat.java8.FutureConverters;
 import springroll.framework.core.annotation.At;
 import springroll.framework.core.annotation.NotOn;
@@ -27,23 +26,23 @@ public class GenericActor extends AbstractActor {
     private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = new HashMap<>();
-            ReflectionUtils.doWithMethods(actorClazz, method -> {
-                if(method.getAnnotation(NotOn.class) != null) return;
+            for(Method method : actorClass.getMethods()) {
+                if(method.getAnnotation(NotOn.class) != null) break;
                 On on = method.getAnnotation(On.class);
-                if(on == null && !method.getName().startsWith("on")) return;
+                if(on == null && !method.getName().startsWith("on")) break;
                 Class<?> messageType = null;
                 if(on != null) messageType = on.value();
                 if(messageType == null || messageType == Object.class) {
                     Class<?>[] paramTypes = method.getParameterTypes();
                     for(Class<?> paramType : paramTypes) {
-                        if(ActorRef.class.isAssignableFrom(paramType)) return;
+                        if(ActorRef.class.isAssignableFrom(paramType)) continue;
                         messageType = paramType;
                         break;
                     }
                 }
                 if(messageType == null) {
                     log.warn("can not map for {}, just skipped.", method);
-                    return;
+                    break;
                 }
                 At at = method.getAnnotation(At.class);
                 String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
@@ -52,7 +51,7 @@ public class GenericActor extends AbstractActor {
                     if(!method.isAccessible()) method.setAccessible(true);
                     stateBehaviors.put(messageType, method);
                 }
-            });
+            }
             return result;
         });
     }
