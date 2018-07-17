@@ -18,7 +18,7 @@
  *
  * {content:"Welcome!"}
  */
-var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval, onLatencyChange) {
+var SpringRollConnection = function(url, onOpen, onError, onClose, pingInterval, onLatencyChange) {
 
     var lastSerialNo = 0;
     var handlers = {};
@@ -35,7 +35,7 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
             output += key + ": " + headers[key] + "\r\n";
         }
         output += "\r\n";
-        if (content) output += JSON.stringify(content);
+        if(content) output += JSON.stringify(content);
         return output;
     };
     var unserialize = function(input) {
@@ -51,64 +51,64 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
             frame.headers[parts[0].trim()] = parts[1].trim();
         }
         var content = lines.slice(++i).join("\r\n");
-        if (content) frame.content = JSON.parse(content);
+        if(content) frame.content = JSON.parse(content);
         return frame;
     };
 
-    var ping = function () {
+    var ping = function() {
         var serialNo = ++lastSerialNo;
         var packet = serialize("PING", null, {
             "Serial-No": serialNo
         });
-        if (console) console.debug(">>", packet);
+        if(console) console.debug(">>", packet);
         webSocket.send(packet);
         pings[serialNo] = new Date().getTime();
     };
-    var tell = function (to, contentClass, content) {
+    var tell = function(to, contentClass, content) {
         var packet = serialize("TELL", to, {
             "Serial-No": ++lastSerialNo,
             "Content-Class": contentClass
         }, content);
-        if (console) console.debug(">>", packet);
+        if(console) console.debug(">>", packet);
         webSocket.send(packet);
     };
-    var ask = function (to, contentClass, content, handler) {
+    var ask = function(to, contentClass, content, handler) {
         var serialNo = ++lastSerialNo;
         var packet = serialize("ASK", to, {
             "Serial-No": serialNo,
             "Content-Class": contentClass
         }, content);
-        if (console) console.debug(">>", packet);
+        if(console) console.debug(">>", packet);
         webSocket.send(packet);
         asks[serialNo] = handler;
     };
-    var close = function () {
+    var close = function() {
         webSocket.close();
     };
-    var on = function (type, handler) {
+    var on = function(type, handler) {
         handlers[type] = handler;
     };
-    var notOn = function (type) {
+    var notOn = function(type) {
         delete handlers[type];
     };
 
     var webSocket = new WebSocket(url);
     webSocket.onopen = function(event) {
-        if (console) console.debug("WebSocket connected");
-        if (onOpen) onOpen(event);
-        if (pingInterval > 0) timer = setInterval(ping, pingInterval);
+        if(console) console.debug("WebSocket connected");
+        if(onOpen) onOpen(event);
+        if(pingInterval > 0) timer = setInterval(ping, pingInterval);
     };
-    webSocket.onerror = function (event) {
-        if (console) console.error("WebSocket error", event);
-        if (onError) onError(event);
+    webSocket.onerror = function(event) {
+        if(console) console.error("WebSocket error", event);
+        if(onError) onError(event);
     };
-    webSocket.onclose = function (event) {
-        if (console) console.debug("WebSocket closed");
-        if (timer) timer.cancel();
-        if (onClose) onClose(event);
+    webSocket.onclose = function(event) {
+        if(console) console.debug("WebSocket closed");
+        if(timer) timer.cancel();
+        if(onClose) onClose(event);
     };
     webSocket.onmessage = function(event) {
-        if (console) console.debug("<<", event.data);
+        if(console) console.debug("<<", event.data);
         var frame = unserialize(event.data);
         switch(frame.method) {
             case "PONG":
@@ -135,7 +135,7 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
                 delete asks[reSerialId];
                 break;
             default:
-                if (console) console.warn("unrecognized frame", frame);
+                if(console) console.warn("unrecognized frame", frame);
         }
     };
 
