@@ -1,9 +1,11 @@
 package springroll.example.chat;
 
+import springroll.framework.protocol.JoinMessage;
+
 import java.io.Serializable;
 import java.util.Collection;
 
-public class Joined implements Serializable {
+public class Joined implements JoinMessage, Serializable {
 
     Collection<String> allChatterNames;
 

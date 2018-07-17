@@ -1,10 +1,8 @@
 package springroll.example.chat;
 
-import springroll.framework.protocol.JoinMessage;
-
 import java.io.Serializable;
 
-public class Join implements JoinMessage, Serializable {
+public class Join implements Serializable {
 
     String chatterName;
 

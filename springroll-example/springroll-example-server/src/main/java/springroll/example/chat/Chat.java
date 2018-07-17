@@ -3,6 +3,7 @@ package springroll.example.chat;
 import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.core.GenericActor;
 
 import java.util.HashMap;
@@ -44,6 +45,10 @@ public class Chat extends GenericActor {
         chatters.forEach((to, name) -> {
             tell(to, new ChatterLeft(senderName));
         });
+    }
+
+    public void on(Disconnected disconnected, ActorRef from) {
+        on(new Leave(), from);
     }
 
 }
