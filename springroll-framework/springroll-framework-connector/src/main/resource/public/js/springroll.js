@@ -88,10 +88,13 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
     var on = function (type, handler) {
         handlers[type] = handler;
     };
+    var notOn = function (type) {
+        delete handlers[type];
+    };
 
     var webSocket = new WebSocket(url);
     webSocket.onopen = function(event) {
-        if (console) console.info("WebSocket connected");
+        if (console) console.debug("WebSocket connected");
         if (onOpen) onOpen(event);
         if (pingInterval > 0) timer = setInterval(ping, pingInterval);
     };
@@ -100,7 +103,7 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
         if (onError) onError(event);
     };
     webSocket.onclose = function (event) {
-        if (console) console.info("WebSocket closed");
+        if (console) console.debug("WebSocket closed");
         if (timer) timer.cancel();
         if (onClose) onClose(event);
     };
@@ -132,10 +135,10 @@ var SpringRollConnection = function (url, onOpen, onError, onClose, pingInterval
                 delete asks[reSerialId];
                 break;
             default:
-                if(console) console.error("unrecognized frame", frame);
+                if (console) console.warn("unrecognized frame", frame);
         }
     };
 
-    return {"ping": ping, "tell": tell, "ask": ask, "close": close, "on": on};
+    return {"ping": ping, "tell": tell, "ask": ask, "close": close, "on": on, "notOn": notOn};
 
 };
