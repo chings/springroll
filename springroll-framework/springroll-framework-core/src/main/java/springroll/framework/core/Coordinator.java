@@ -11,13 +11,11 @@ public interface Coordinator {
     void unprovide();
 
     void listenProvide(BiConsumer<String, String> listener);
-
     void unlistenProvide(BiConsumer<String, String> listener);
 
     void listenUnprovide(Consumer<String> listener);
-
     void unlistenUnprovide(Consumer<String> listener);
 
-    void synchronize();
+    void synchronize(BiConsumer<String, String> listener);
 
 }

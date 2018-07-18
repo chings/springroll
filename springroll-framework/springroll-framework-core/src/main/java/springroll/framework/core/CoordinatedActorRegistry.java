@@ -67,10 +67,12 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     @Autowired(required = false)
     public void setCoordinator(Coordinator coordinator) {
         this.coordinator = coordinator;
+
         coordinator.listenProvide(this::onProvide);
         coordinator.listenUnprovide(this::onUnprovide);
+
         remoteActors.clear();
-        coordinator.synchronize();
+        coordinator.synchronize(this::onProvide);
     }
 
     public void setLocalElector(Function<List<Registration>, Integer> localElector) {

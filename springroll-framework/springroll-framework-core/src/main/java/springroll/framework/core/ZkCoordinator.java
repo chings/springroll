@@ -147,12 +147,10 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     }
 
     @Override
-    public void synchronize() {
+    public void synchronize(BiConsumer<String, String> provideListener) {
         for(ChildData childData : cache.getCurrentChildren(rootPath).values()) {
             String[] tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
-            for(BiConsumer<String, String> provideListener : provideListeners) {
-                provideListener.accept(tuple[0], tuple[1]);
-            }
+            provideListener.accept(tuple[0], tuple[1]);
         }
     }
 

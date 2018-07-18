@@ -104,7 +104,7 @@ var SpringRollConnection = function(url, onOpen, onError, onClose, pingInterval,
     };
     webSocket.onclose = function(event) {
         if(console) console.debug("WebSocket closed");
-        if(timer) timer.cancel();
+        if(timer) clearInterval(timer);
         if(onClose) onClose(event);
     };
     webSocket.onmessage = function(event) {
@@ -114,7 +114,7 @@ var SpringRollConnection = function(url, onOpen, onError, onClose, pingInterval,
             case "PONG":
                 var reSerialId = frame.headers["Re-Serial-No"];
                 var pingAt = pings[reSerialId];
-                var latency = pingAt - new Date().getTime();
+                var latency = new Date().getTime() - pingAt;
                 if (onLatencyChange) onLatencyChange(latency);
                 delete pings[reSerialId];
                 break;

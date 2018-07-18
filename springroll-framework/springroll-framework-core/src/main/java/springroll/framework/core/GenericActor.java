@@ -27,9 +27,9 @@ public class GenericActor extends AbstractActor {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = new HashMap<>();
             for(Method method : actorClass.getMethods()) {
-                if(method.getAnnotation(NotOn.class) != null) break;
+                if(method.getAnnotation(NotOn.class) != null) continue;
                 On on = method.getAnnotation(On.class);
-                if(on == null && !method.getName().startsWith("on")) break;
+                if(on == null && !method.getName().startsWith("on")) continue;
                 Class<?> messageType = null;
                 if(on != null) messageType = on.value();
                 if(messageType == null || messageType == Object.class) {
@@ -42,7 +42,7 @@ public class GenericActor extends AbstractActor {
                 }
                 if(messageType == null) {
                     log.warn("can not map for {}, just skipped.", method);
-                    break;
+                    continue;
                 }
                 At at = method.getAnnotation(At.class);
                 String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };

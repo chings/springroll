@@ -12,6 +12,12 @@ or in the "license" file accompanying this file. This file is distributed on an 
     background-color: #f8981d;
 }
 
+.navbar small {
+    position: absolute;
+    right: 10px;
+    top: 17px;
+}
+
 .members {
     position: fixed;
     top: 54px;

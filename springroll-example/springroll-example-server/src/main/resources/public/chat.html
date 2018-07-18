@@ -14,6 +14,7 @@
 <div id="app">
     <nav class="navbar navbar-inverse">
         <a class="navbar-brand" href="#">SpringRoll Chat Demo</a>
+        <small>latency: {{ latency }} ms</small>
     </nav>
     <div class="container-fluid">
         <div class="row">
@@ -86,20 +87,22 @@
         connection.tell(chatUri, "Join", {
             chatterName: myScreenName
         });
-    }, null, null, 30000);
+    }, null, null, 30000, function(latency) {
+        app.$data.latency = latency;
+    });
     window.onbeforeunload = function() {
         connection.tell(chatUri, "Leave", {});
         connection.close();
     };
 
-    new Vue({
+    var app = new Vue({
         el: '#app',
         mixins: [VueFocus.mixin],
         data: {
             message: '',
             messages: [],
             members: {},
-            latency: 0 + "ms"
+            latency: "-"
         },
         methods: {
             send: function() {
