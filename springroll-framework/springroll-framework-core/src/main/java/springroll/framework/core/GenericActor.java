@@ -7,57 +7,112 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import scala.compat.java8.FutureConverters;
-import springroll.framework.core.annotation.At;
-import springroll.framework.core.annotation.NotOn;
-import springroll.framework.core.annotation.On;
+import springroll.framework.core.annotation.*;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static springroll.framework.core.Actors.SECONDLY;
 
 public class GenericActor extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(GenericActor.class);
-
     private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
+    private static final String INITIIAL = "";
+    private static final String ANY = "*";
+
+    private static Map<String, Map<Class<?>, Method>> analyseStateBehaviors(Class<?> stateClass, Map<String, Map<Class<?>, Method>> result) {
+        Map<Class<?>, Method> stateBehaviors = new HashMap<>();
+        for(Method method : stateClass.getMethods()) {
+            if(method.getAnnotation(NotOn.class) != null) continue;
+            On on = method.getAnnotation(On.class);
+            if(on == null && !method.getName().startsWith("on")) continue;
+            Class<?> messageType = null;
+            if(on != null) messageType = on.value();
+            if(messageType == null || messageType == Object.class) {
+                Class<?>[] paramTypes = method.getParameterTypes();
+                for(Class<?> paramType : paramTypes) {
+                    if(ActorRef.class.isAssignableFrom(paramType)) continue;
+                    messageType = paramType;
+                    break;
+                }
+            }
+            if(messageType == null) {
+                log.warn("can not map for {}, just skipped.", method);
+                continue;
+            }
+            if(!method.isAccessible()) method.setAccessible(true);
+            stateBehaviors.put(messageType, method);
+        }
+
+        if(!stateBehaviors.isEmpty()) {
+            State state = stateClass.getAnnotation(State.class);
+            Set<String> stateKeys = new HashSet<>();
+            stateKeys.add(stateClass.getCanonicalName());
+            if(stateClass.getAnnotation(Initial.class) != null) stateKeys.add(INITIIAL);
+            if(stateClass.getAnnotation(Any.class) != null) stateKeys.add(ANY);
+            if(state != null) for(String stateName : state.value()) {
+                if(StringUtils.hasText(stateName)) stateKeys.add(stateName);
+            }
+            for(String stateKey : stateKeys) {
+                result.put(stateKey, stateBehaviors);
+            }
+        }
+
+        for(Class<?> innerClass : stateClass.getClasses()) {
+            int modifiers = innerClass.getModifiers();
+            if(innerClass.getAnnotation(State.class) == null) continue;
+            if(Modifier.toString(modifiers).contains("static")) continue;
+            analyseStateBehaviors(innerClass, result);
+        }
+        return result;
+    }
+
     private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
-            Map<String, Map<Class<?>, Method>> result = new HashMap<>();
-            for(Method method : actorClass.getMethods()) {
-                if(method.getAnnotation(NotOn.class) != null) continue;
-                On on = method.getAnnotation(On.class);
-                if(on == null && !method.getName().startsWith("on")) continue;
-                Class<?> messageType = null;
-                if(on != null) messageType = on.value();
-                if(messageType == null || messageType == Object.class) {
-                    Class<?>[] paramTypes = method.getParameterTypes();
-                    for(Class<?> paramType : paramTypes) {
-                        if(ActorRef.class.isAssignableFrom(paramType)) continue;
-                        messageType = paramType;
-                        break;
-                    }
-                }
-                if(messageType == null) {
-                    log.warn("can not map for {}, just skipped.", method);
-                    continue;
-                }
-                At at = method.getAnnotation(At.class);
-                String[] stateKeys = at != null ? at.value() : new String[] { At.BEGINNING };
-                for(String stateKey : stateKeys) {
-                    Map<Class<?>, Method> stateBehaviors = result.computeIfAbsent(stateKey, key -> new HashMap<>());
-                    if(!method.isAccessible()) method.setAccessible(true);
-                    stateBehaviors.put(messageType, method);
+            Map<String, Map<Class<?>, Method>> result = analyseStateBehaviors(actorClazz, new LinkedHashMap<String, Map<Class<?>, Method>>());
+            if(!result.containsKey(INITIIAL)) {
+                for(Map<Class<?>, Method> value : result.values()) {
+                    result.put(INITIIAL, value);
+                    break;
                 }
             }
             return result;
         });
     }
 
+    private static Map<Class<?>, Object> createStateObjects(Object stateObject, Map<Class<?>, Object> result) {
+        for(Class<?> innerStateClass : stateObject.getClass().getClasses()) {
+            int modifiers = innerStateClass.getModifiers();
+            if(innerStateClass.getAnnotation(State.class) == null) continue;
+            if(Modifier.toString(modifiers).contains("static")) continue;
+            try {
+                Constructor<?> constructor = innerStateClass.getConstructors()[0];
+                Object innerStateObject = constructor.newInstance(stateObject);
+                result.put(innerStateClass, innerStateObject);
+                createStateObjects(innerStateObject, result);
+            } catch(InstantiationException | IllegalAccessException | InvocationTargetException x) {
+                log.error("inner state object instantiated failed: {}", x.getMessage(), x);
+                throw new RuntimeException(x);
+            }
+        }
+        return result;
+    }
+
+    public static Map<Class<?>, Object> createStateObjects(Object stateObject) {
+        Map<Class<?>, Object> result = new HashMap<>();
+        result.put(stateObject.getClass(), stateObject);
+        return createStateObjects(stateObject, result);
+    }
+
     protected Map<String, Map<Class<?>, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
-    protected String currentState = At.BEGINNING;
+    protected Map<Class<?>, Object> stateObjects = createStateObjects(this);
+    protected String currentState = INITIIAL;
 
     @Override
     public AbstractActor.Receive createReceive() {
@@ -66,7 +121,7 @@ public class GenericActor extends AbstractActor {
 
     protected Receive stateReceive(String state) {
         Map<Class<?>, Method> stateBehaviors = new HashMap<>();
-        Map<Class<?>, Method> behaviors = allStateBehaviors.get(At.ALL);
+        Map<Class<?>, Method> behaviors = allStateBehaviors.get(ANY);
         if(behaviors != null) stateBehaviors.putAll(behaviors);
         behaviors = allStateBehaviors.get(state);
         if(behaviors != null) stateBehaviors.putAll(behaviors);
@@ -74,8 +129,9 @@ public class GenericActor extends AbstractActor {
         for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
             receiveBuilder.match(stateBehavior.getKey(), message -> {
                 Method method = stateBehavior.getValue();
+                Object target = stateObjects.get(method.getDeclaringClass());
                 Object[] args = preHandle(message, method);
-                Object result = method.invoke(this, args);
+                Object result = method.invoke(target, args);
                 postHandle(result);
             });
         }
@@ -107,6 +163,10 @@ public class GenericActor extends AbstractActor {
             become((String)result);
             return;
         }
+        if(result instanceof Class<?>) {
+            become((Class<?>)result);
+            return;
+        }
         if(result instanceof Terminate) {
             terminate();
             return;
@@ -136,6 +196,10 @@ public class GenericActor extends AbstractActor {
     public void become(String state) {
         currentState = state;
         getContext().become(stateReceive(currentState));
+    }
+
+    public void become(Class<?> stateClass) {
+        become(stateClass.getCanonicalName());
     }
 
     public void tell(ActorRef actor, Object message) {

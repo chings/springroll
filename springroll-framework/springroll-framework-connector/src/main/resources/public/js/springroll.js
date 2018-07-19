@@ -115,7 +115,7 @@ var SpringRollConnection = function(url, onOpen, onError, onClose, pingInterval,
                 var reSerialId = frame.headers["Re-Serial-No"];
                 var pingAt = pings[reSerialId];
                 var latency = new Date().getTime() - pingAt;
-                if (onLatencyChange) onLatencyChange(latency);
+                if(onLatencyChange) onLatencyChange(latency);
                 delete pings[reSerialId];
                 break;
             case "TELL":

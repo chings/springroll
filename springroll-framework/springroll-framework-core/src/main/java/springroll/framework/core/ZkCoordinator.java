@@ -77,7 +77,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     void ensure(String nodePath) {
         String[] nodeNames = nodePath.split("/");
         String path = "";
-        for (String nodeName : nodeNames) {
+        for(String nodeName : nodeNames) {
             if(StringUtils.isEmpty(nodeName)) continue;
             path += "/" + nodeName;
             try {

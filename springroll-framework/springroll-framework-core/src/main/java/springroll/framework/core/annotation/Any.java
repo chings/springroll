@@ -3,14 +3,8 @@ package springroll.framework.core.annotation;
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Inherited
 @Documented
-public @interface At {
-
-    String BEGINNING = "";
-    String ALL = "*";
-
-    String[] value() default "";
-
+public @interface Any {
 }

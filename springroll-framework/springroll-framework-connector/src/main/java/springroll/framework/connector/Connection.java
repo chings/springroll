@@ -12,7 +12,7 @@ import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.core.ActorRegistry;
 import springroll.framework.core.Actors;
 import springroll.framework.core.GenericActor;
-import springroll.framework.core.annotation.At;
+import springroll.framework.core.annotation.State;
 import springroll.framework.protocol.JoinMessage;
 import springroll.framework.protocol.UnjoinMessage;
 
@@ -24,9 +24,6 @@ import static springroll.framework.connector.Frame.Method;
 
 public class Connection extends GenericActor {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
-
-    public static final String CONNECTING = At.BEGINNING;
-    public static final String CONNECTED = "CONNECTED";
 
     @Autowired
     ActorRegistry actorRegistry;
@@ -40,21 +37,25 @@ public class Connection extends GenericActor {
 
     Set<ActorRef> joinedActors = new HashSet<>();
 
-    public String on(Connected connected) {
+    public void on(Connected connected) {
         principalName = connected.getPrincipalName();
         source = connected.getSource();
         sink = connected.getSink();
         source.subscribe(this::handleNext, this::handleError, this::handleComplete);
-        return CONNECTED;
+        become(ConnectedState.class);
     }
 
-    @At(CONNECTED)
-    public void on(Object message, ActorRef from) {
-        Frame frame = frameProtocol.marshal(message);
-        frame.setMethod(Method.TELL);
-        frame.setUri(Actors.shortPath(from));
-        sink.next(frame);
-        postOutgo(message, from);
+    @State
+    public class ConnectedState {
+
+        public void on(Object message, ActorRef from) {
+            Frame frame = frameProtocol.marshal(message);
+            frame.setMethod(Method.TELL);
+            frame.setUri(Actors.shortPath(from));
+            sink.next(frame);
+            postSendOutward(message, from);
+        }
+
     }
 
     public void handleNext(Frame frame) {
@@ -70,14 +71,14 @@ public class Connection extends GenericActor {
                 ActorRef to = actorRegistry.resovle(frame.getUri());
                 String namespace = actorRegistry.askNamespace(frame.getUri());
                 Object message = frameProtocol.unmarshal(frame, namespace);
-                preIncome(to, message);
+                preSendInward(to, message);
                 tell(to, message);
                 break;
             case ASK:
                 to = actorRegistry.resovle(frame.getUri());
                 namespace = actorRegistry.askNamespace(frame.getUri());
                 message = frameProtocol.unmarshal(frame, namespace);
-                preIncome(to, message);
+                preSendInward(to, message);
                 ask(to, message, reply -> {
                     if(reply instanceof Throwable) {
                         Frame errorFrame = new Frame(Method.ERROR);
@@ -90,7 +91,7 @@ public class Connection extends GenericActor {
                         replyFrame.setUri(frame.getUri());
                         replyFrame.setReSerialNo(frame.getSerialNo());
                         sink.next(replyFrame);
-                        postOutgo(message, to);
+                        postSendOutward(message, to);
                     }
                 });
                 break;
@@ -99,7 +100,7 @@ public class Connection extends GenericActor {
         }
     }
 
-    public void preIncome(ActorRef to, Object message) {
+    public void preSendInward(ActorRef to, Object message) {
         if(message instanceof JoinMessage) {
             joinedActors.add(to);
         } else if(message instanceof UnjoinMessage) {
@@ -107,8 +108,8 @@ public class Connection extends GenericActor {
         }
     }
 
-    public void postOutgo(Object message, ActorRef from) {
-        preIncome(from, message);
+    public void postSendOutward(Object message, ActorRef from) {
+        preSendInward(from, message);
     }
 
     public void handleError(Throwable x) {
