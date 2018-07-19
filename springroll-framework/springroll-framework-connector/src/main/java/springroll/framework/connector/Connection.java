@@ -9,6 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
+import springroll.framework.connector.protocol.Kick;
 import springroll.framework.core.ActorRegistry;
 import springroll.framework.core.Actors;
 import springroll.framework.core.GenericActor;
@@ -47,6 +48,13 @@ public class Connection extends GenericActor {
 
     @State
     public class ConnectedState {
+
+        public void on(Kick message) {
+            Frame frame = frameProtocol.marshal(message);
+            frame.setMethod(Method.ERROR);
+            sink.next(frame);
+            sink.complete();
+        }
 
         public void on(Object message, ActorRef from) {
             Frame frame = frameProtocol.marshal(message);

@@ -11,10 +11,18 @@ public class SpringActorSystem implements Extension {
 
     ApplicationContext applicationContext;
     ExtendedActorSystem actorSystem;
+    String remoteRootPath;
 
+    @SuppressWarnings("deprecated")
     public SpringActorSystem(ApplicationContext applicationContext, ExtendedActorSystem actorSystem) {
         this.applicationContext = applicationContext;
         this.actorSystem = actorSystem;
+        remoteRootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
+        remoteRootPath = remoteRootPath.substring(0, remoteRootPath.length() - 1);
+    }
+
+    public String getRemoteRootPath() {
+        return remoteRootPath;
     }
 
     public Props props(String beanName) {
@@ -51,12 +59,6 @@ public class SpringActorSystem implements Extension {
 
     public ActorSelection select(String actorPath) {
         return actorSystem.actorSelection(actorPath);
-    }
-
-    @SuppressWarnings("deprecated")
-    public String getHost() {
-        String rootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
-        return rootPath.substring(0, rootPath.length() - 1);
     }
 
 }

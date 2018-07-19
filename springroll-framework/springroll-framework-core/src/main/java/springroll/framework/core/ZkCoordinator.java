@@ -58,13 +58,14 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
             if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
             switch(event.getType()) {
                 case NODE_ADDED:
-                    String[] tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+                case NODE_UPDATED:
+                    String[] tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
                     for(BiConsumer<String, String> provideListener : provideListeners) {
                         provideListener.accept(tuple[0], tuple[1]);
                     }
                     break;
                 case NODE_REMOVED:
-                    tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+                    tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
                     for(Consumer<String> unprovideListener : unprovideListeners) {
                         unprovideListener.accept(tuple[0]);
                     }
@@ -93,7 +94,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     @Override
     public void provide(String actorPath, String actorClassName) {
         try {
-            String data = build(actorPath, actorClassName);
+            String data = join(actorPath, actorClassName);
             String nodePath = client.create()
                     .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
                     .forPath(rootPath + "/" + nodeNamePrefix, data.getBytes(DEFAULT_CHARSET));
@@ -149,7 +150,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     @Override
     public void synchronize(BiConsumer<String, String> provideListener) {
         for(ChildData childData : cache.getCurrentChildren(rootPath).values()) {
-            String[] tuple = parse(new String(childData.getData(), DEFAULT_CHARSET));
+            String[] tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
             provideListener.accept(tuple[0], tuple[1]);
         }
     }
@@ -161,7 +162,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         client.close();
     }
 
-    String build(String... data) {
+    static String join(String... data) {
         StringBuilder result = new StringBuilder();
         for(String datum : data) {
             if(result.length() > 0) result.append('\n');
@@ -170,7 +171,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         return result.toString();
     }
 
-    String[] parse(String data) {
+    static String[] split(String data) {
         return data.split("\n");
     }
 

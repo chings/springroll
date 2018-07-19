@@ -1,6 +1,8 @@
 package springroll.framework.connector.protocol;
 
-public class Disconnected {
+import java.io.Serializable;
+
+public class Disconnected implements Serializable {
 
     String principalName;
     String reason;

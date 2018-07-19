@@ -49,19 +49,17 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     }
 
     SpringActorSystem springActorSystem;
-    String myHost;
     Coordinator coordinator;
 
     SimpleMultiValueMap<String, Registration> localActors = new SimpleMultiValueMap<>();
     Function<List<Registration>, Integer> localElector = registrations -> 0;
 
     SimpleMultiValueMap<String, Registration> remoteActors = new SimpleMultiValueMap<>();
-    Function<List<Registration>, Integer> remoteElector = registrations -> myHost.hashCode() % registrations.size();
+    Function<List<Registration>, Integer> remoteElector = registrations -> springActorSystem.getRemoteRootPath().hashCode() % registrations.size();
 
     @Autowired
     public void setSpringActorSystem(SpringActorSystem springActorSystem) {
         this.springActorSystem = springActorSystem;
-        myHost = springActorSystem.getHost();
     }
 
     @Autowired(required = false)
@@ -97,7 +95,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
         String actorPath = actorRef.path().toString();
         String shortPath = shortPath(actorPath);
         localActors.add(shortPath, new Registration(actorPath, actorClass.getCanonicalName()));
-        if(coordinator != null) coordinator.provide(myHost + shortPath, actorClass.getCanonicalName());
+        if(coordinator != null)
+            coordinator.provide(springActorSystem.getRemoteRootPath() + shortPath, actorClass.getCanonicalName());
     }
 
     @Override
@@ -105,7 +104,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
         String actorPath = ref.path().toString();
         String shortPath = shortPath(actorPath);
         localActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
-        if(coordinator != null) coordinator.unprovide(myHost + shortPath);
+        if(coordinator != null) coordinator.unprovide(springActorSystem.getRemoteRootPath() + shortPath);
     }
 
     @Override
@@ -129,7 +128,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
                 .collect(Collectors.toList()));
         if(coordinator != null) {
             result.addAll(remoteActors.get(shortPath).stream()
-                    .filter(registration -> registration.actorPath.indexOf(myHost) == -1)
+                    .filter(registration -> registration.actorPath.indexOf(springActorSystem.getRemoteRootPath()) == -1)
                     .map(registration -> registration.getActorRef())
                     .collect(Collectors.toList()));
         }
@@ -157,7 +156,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
                 .collect(Collectors.toList()));
         if(coordinator != null) {
             result.addAll(remoteActors.get(shortPath).stream()
-                    .filter(registration -> registration.actorPath.indexOf(myHost) == -1)
+                    .filter(registration -> registration.actorPath.indexOf(springActorSystem.getRemoteRootPath()) == -1)
                     .map(registration -> registration.getActorSelection())
                     .collect(Collectors.toList()));
         }

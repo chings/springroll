@@ -26,8 +26,8 @@ public class GenericActor extends AbstractActor {
     private static final String INITIIAL = "";
     private static final String ANY = "*";
 
-    private static Map<String, Map<Class<?>, Method>> analyseStateBehaviors(Class<?> stateClass, Map<String, Map<Class<?>, Method>> result) {
-        Map<Class<?>, Method> stateBehaviors = new HashMap<>();
+    private static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<?> stateClass, Map<String, Map<Class<?>, Method>> result) {
+        Map<Class<?>, Method> stateBehaviors = new LinkedHashMap<>();
         for(Method method : stateClass.getMethods()) {
             if(method.getAnnotation(NotOn.class) != null) continue;
             On on = method.getAnnotation(On.class);
@@ -68,14 +68,14 @@ public class GenericActor extends AbstractActor {
             int modifiers = innerClass.getModifiers();
             if(innerClass.getAnnotation(State.class) == null) continue;
             if(Modifier.toString(modifiers).contains("static")) continue;
-            analyseStateBehaviors(innerClass, result);
+            analyseBehaviors(innerClass, result);
         }
         return result;
     }
 
     private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
-            Map<String, Map<Class<?>, Method>> result = analyseStateBehaviors(actorClazz, new LinkedHashMap<String, Map<Class<?>, Method>>());
+            Map<String, Map<Class<?>, Method>> result = analyseBehaviors(actorClazz, new LinkedHashMap<String, Map<Class<?>, Method>>());
             if(!result.containsKey(INITIIAL)) {
                 for(Map<Class<?>, Method> value : result.values()) {
                     result.put(INITIIAL, value);
@@ -104,14 +104,14 @@ public class GenericActor extends AbstractActor {
         return result;
     }
 
-    public static Map<Class<?>, Object> createStateObjects(Object stateObject) {
+    private static Map<Class<?>, Object> createStateObjects(Object stateObject) {
         Map<Class<?>, Object> result = new HashMap<>();
         result.put(stateObject.getClass(), stateObject);
         return createStateObjects(stateObject, result);
     }
 
     protected Map<String, Map<Class<?>, Method>> allStateBehaviors = analyseBehaviors(this.getClass());
-    protected Map<Class<?>, Object> stateObjects = createStateObjects(this);
+    protected Map<Class<?>, Object> allStateObjects = createStateObjects(this);
     protected String currentState = INITIIAL;
 
     @Override
@@ -129,7 +129,7 @@ public class GenericActor extends AbstractActor {
         for(Map.Entry<Class<?>, Method> stateBehavior : stateBehaviors.entrySet()) {
             receiveBuilder.match(stateBehavior.getKey(), message -> {
                 Method method = stateBehavior.getValue();
-                Object target = stateObjects.get(method.getDeclaringClass());
+                Object target = allStateObjects.get(method.getDeclaringClass());
                 Object[] args = preHandle(message, method);
                 Object result = method.invoke(target, args);
                 postHandle(result);
