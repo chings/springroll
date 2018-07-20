@@ -12,7 +12,7 @@ import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.connector.protocol.Kick;
 import springroll.framework.core.ActorRegistry;
 import springroll.framework.core.Actors;
-import springroll.framework.core.GenericActor;
+import springroll.framework.core.ActorGist;
 import springroll.framework.core.annotation.State;
 import springroll.framework.protocol.JoinMessage;
 import springroll.framework.protocol.UnjoinMessage;
@@ -23,7 +23,7 @@ import java.util.Set;
 
 import static springroll.framework.connector.Frame.Method;
 
-public class Connection extends GenericActor {
+public class Connection extends ActorGist {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
 
     @Autowired

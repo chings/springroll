@@ -18,12 +18,8 @@ import static springroll.framework.core.Actors.userPath;
 public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
     private static Logger log = LoggerFactory.getLogger(ActorReferencePostProcessor.class);
 
-    ActorRegistry actorRegistry;
-
     @Autowired
-    public void setActorRegistry(ActorRegistry actorRegistry) {
-        this.actorRegistry = actorRegistry;
-    }
+    ActorRegistry actorRegistry;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {

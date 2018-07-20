@@ -11,18 +11,22 @@ public class SpringActorSystem implements Extension {
 
     ApplicationContext applicationContext;
     ExtendedActorSystem actorSystem;
-    String remoteRootPath;
+    String servingRoot;
 
     @SuppressWarnings("deprecated")
     public SpringActorSystem(ApplicationContext applicationContext, ExtendedActorSystem actorSystem) {
         this.applicationContext = applicationContext;
         this.actorSystem = actorSystem;
-        remoteRootPath = Serialization.serializedActorPath(actorSystem.actorFor("/"));
-        remoteRootPath = remoteRootPath.substring(0, remoteRootPath.length() - 1);
+        servingRoot = Serialization.serializedActorPath(actorSystem.actorFor("/"));
+        servingRoot = servingRoot.substring(0, servingRoot.length() - 1);
     }
 
-    public String getRemoteRootPath() {
-        return remoteRootPath;
+    public String getServingRoot() {
+        return servingRoot;
+    }
+
+    public String getServingPath(ActorRef actorRef) {
+        return servingRoot + Actors.shortPath(actorRef);
     }
 
     public Props props(String beanName) {

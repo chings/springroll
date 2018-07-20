@@ -20,9 +20,9 @@ import java.util.function.Consumer;
 
 import static springroll.framework.core.Actors.SECONDLY;
 
-public class GenericActor extends AbstractActor {
-    private static Logger log = LoggerFactory.getLogger(GenericActor.class);
-    private static Map<Class<? extends GenericActor>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
+public abstract class ActorGist extends AbstractActor {
+    private static Logger log = LoggerFactory.getLogger(ActorGist.class);
+    private static Map<Class<? extends ActorGist>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
     private static final String INITIIAL = "";
     private static final String ANY = "*";
 
@@ -73,7 +73,7 @@ public class GenericActor extends AbstractActor {
         return result;
     }
 
-    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends GenericActor> actorClass) {
+    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends ActorGist> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = analyseBehaviors(actorClazz, new LinkedHashMap<String, Map<Class<?>, Method>>());
             if(!result.containsKey(INITIIAL)) {
