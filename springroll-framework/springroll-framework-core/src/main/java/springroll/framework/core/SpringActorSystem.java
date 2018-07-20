@@ -26,7 +26,7 @@ public class SpringActorSystem implements Extension {
     }
 
     public String getServingPath(ActorRef actorRef) {
-        return servingRoot + Actors.shortPath(actorRef);
+        return servingRoot + ActorRegistry.shortPath(actorRef);
     }
 
     public Props props(String beanName) {
@@ -63,6 +63,14 @@ public class SpringActorSystem implements Extension {
 
     public ActorSelection select(String actorPath) {
         return actorSystem.actorSelection(actorPath);
+    }
+
+    public static void tell(ActorRef actor, Object message) {
+        actor.tell(message, ActorRef.noSender());
+    }
+
+    public static void tell(ActorSelection actor, Object message) {
+        actor.tell(message, ActorRef.noSender());
     }
 
 }

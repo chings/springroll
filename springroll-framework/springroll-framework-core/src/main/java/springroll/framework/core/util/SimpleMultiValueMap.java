@@ -1,21 +1,13 @@
 package springroll.framework.core.util;
 
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 
 public class SimpleMultiValueMap<K, V> extends LinkedMultiValueMap<K, V> {
-
-    public V getOne(K key, Function<List<V>, Integer> elector) {
-        List<V> candinates = get(key);
-        if(CollectionUtils.isEmpty(candinates)) return null;
-        return candinates.get(elector.apply(candinates));
-    }
 
     public void forEachOne(BiConsumer<? super K, ? super V> consumer) {
         for(Entry<K, List<V>> entry : this.entrySet()) {

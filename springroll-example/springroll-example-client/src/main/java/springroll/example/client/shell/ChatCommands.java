@@ -14,8 +14,6 @@ import springroll.example.chat.ToJoin;
 import springroll.framework.core.SpringActorSystem;
 import springroll.framework.core.annotation.ActorReference;
 
-import static springroll.framework.core.Actors.tell;
-
 @ShellComponent
 public class ChatCommands {
     private static Logger log = LoggerFactory.getLogger(ChatCommands.class);
@@ -33,17 +31,17 @@ public class ChatCommands {
     @ShellMethod("Join the chat")
     public void join(@ShellOption(defaultValue = DEFAULT_NAME) String name) {
         chatter = springActorSystem.spawn(Chatter.class);
-        tell(chatter, new ToJoin(chat, name));
+        SpringActorSystem.tell(chatter, new ToJoin(chat, name));
     }
 
     @ShellMethod("Say something")
     public void say(String content) {
-        tell(chatter, new Say(content));
+        SpringActorSystem.tell(chatter, new Say(content));
     }
 
     @ShellMethod("Left the chat")
     public void leave() {
-        tell(chatter, new Leave());
+        SpringActorSystem.tell(chatter, new Leave());
         System.exit(0);
     }
 

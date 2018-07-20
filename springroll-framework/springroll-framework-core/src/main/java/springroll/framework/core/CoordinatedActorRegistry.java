@@ -9,12 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import springroll.framework.core.util.SimpleMultiValueMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static springroll.framework.core.Actors.shortPath;
-import static springroll.framework.core.Actors.userPath;
 
 public class CoordinatedActorRegistry implements ActorRegistry {
     private static Logger log = LoggerFactory.getLogger(CoordinatedActorRegistry.class);
@@ -22,6 +21,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     public class Registration {
         String actorPath;
         String actorClassName;
+        Double loadFactor;
         ActorRef cachedActorRef;
         ActorSelection cachedActorSelection;
 
@@ -29,20 +29,18 @@ public class CoordinatedActorRegistry implements ActorRegistry {
             this.actorPath = actorPath;
             this.actorClassName = actorClassName;
         }
-        public Registration(String actorPath, ActorRef cachedActorRef) {
-            this.actorPath = actorPath;
-            this.cachedActorRef = cachedActorRef;
-        }
 
         public String getNamesapce() {
             int n = actorClassName.lastIndexOf(".");
             return n < 0 ? "" : actorClassName.substring(0, n);
         }
-        public ActorRef getActorRef() {
+
+        ActorRef getActorRef() {
             if(cachedActorRef == null) cachedActorRef = springActorSystem.resolve(actorPath);
             return cachedActorRef;
         }
-        public ActorSelection getActorSelection() {
+
+        ActorSelection getActorSelection() {
             if(cachedActorSelection == null) cachedActorSelection = springActorSystem.select(actorPath);
             return cachedActorSelection;
         }
@@ -52,10 +50,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     Coordinator coordinator;
 
     SimpleMultiValueMap<String, Registration> localActors = new SimpleMultiValueMap<>();
-    Function<List<Registration>, Integer> localElector = registrations -> 0;
-
     SimpleMultiValueMap<String, Registration> remoteActors = new SimpleMultiValueMap<>();
-    Function<List<Registration>, Integer> remoteElector = registrations -> springActorSystem.getServingRoot().hashCode() % registrations.size();
+    Function<List<Registration>, Registration> actorElectStrategy = registrations -> {
+        Collections.sort(registrations, Comparator.comparing(registration -> registration.loadFactor));
+        return registrations.get(0);
+    };
 
     @Autowired
     public void setSpringActorSystem(SpringActorSystem springActorSystem) {
@@ -73,16 +72,9 @@ public class CoordinatedActorRegistry implements ActorRegistry {
         coordinator.synchronize(this::onProvide);
     }
 
-    public void setLocalElector(Function<List<Registration>, Integer> localElector) {
-        this.localElector = localElector;
-    }
-
-    public void setRemoteElector(Function<List<Registration>, Integer> remoteElector) {
-        this.remoteElector = remoteElector;
-    }
 
     public synchronized void onProvide(String actorPath, String actorClassName) {
-        String shortPath = shortPath(actorPath);
+        String shortPath = ActorRegistry.shortPath(actorPath);
         remoteActors.add(shortPath, new Registration(actorPath, actorClassName));
     }
 
@@ -93,27 +85,31 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     @Override
     public synchronized void register(ActorRef actorRef, Class<? extends Actor> actorClass) {
         String actorPath = actorRef.path().toString();
-        String shortPath = shortPath(actorPath);
+        String shortPath = ActorRegistry.shortPath(actorPath);
         localActors.add(shortPath, new Registration(actorPath, actorClass.getCanonicalName()));
         if(coordinator != null)
             coordinator.provide(springActorSystem.getServingRoot() + shortPath, actorClass.getCanonicalName());
     }
 
     @Override
+    public synchronized void report(ActorRef actorRef, double loadFactor) {
+    }
+
+    @Override
     public synchronized void unregister(ActorRef ref) {
         String actorPath = ref.path().toString();
-        String shortPath = shortPath(actorPath);
+        String shortPath = ActorRegistry.shortPath(actorPath);
         localActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
         if(coordinator != null) coordinator.unprovide(springActorSystem.getServingRoot() + shortPath);
     }
 
     @Override
     public synchronized ActorRef resovle(String path) {
-        String shortPath = userPath(path);
-        Registration registration = localActors.getOne(shortPath, localElector);
+        String shortPath = ActorRegistry.userPath(path);
+        Registration registration = actorElectStrategy.apply(localActors.get(shortPath));
         if(registration != null) return registration.getActorRef();
         if(coordinator != null) {
-            registration = remoteActors.getOne(shortPath, remoteElector);
+            registration = actorElectStrategy.apply(remoteActors.get(shortPath));
             if(registration != null) return registration.getActorRef();
         }
         return null;
@@ -121,7 +117,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized List<ActorRef> resolveAll(String path) {
-        String shortPath = userPath(path);
+        String shortPath = ActorRegistry.userPath(path);
         List<ActorRef> result = new ArrayList<>();
         result.addAll(localActors.get(shortPath).stream()
                 .map(registration -> registration.getActorRef())
@@ -137,11 +133,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized ActorSelection select(String path) {
-        String shortPath = userPath(path);
-        Registration registration = localActors.getOne(shortPath, localElector);
+        String shortPath = ActorRegistry.userPath(path);
+        Registration registration = actorElectStrategy.apply(localActors.get(shortPath));
         if(registration != null) return registration.getActorSelection();
         if(coordinator != null) {
-            registration = remoteActors.getOne(shortPath, remoteElector);
+            registration = actorElectStrategy.apply(remoteActors.get(shortPath));
             if(registration != null) return registration.getActorSelection();
         }
         return null;
@@ -149,7 +145,7 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized List<ActorSelection> selectAll(String path) {
-        String shortPath = userPath(path);
+        String shortPath = ActorRegistry.userPath(path);
         List<ActorSelection> result = new ArrayList<>();
         result.addAll(localActors.get(shortPath).stream()
                 .map(registration -> registration.getActorSelection())
@@ -165,11 +161,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public String askNamespace(String path) {
-        String shortPath = userPath(path);
-        Registration registration = localActors.getOne(shortPath, localElector);
+        String shortPath = ActorRegistry.userPath(path);
+        Registration registration = localActors.getFirst(shortPath);
         if(registration != null) return registration.getNamesapce();
         if(coordinator != null) {
-            registration = remoteActors.getOne(shortPath, remoteElector);
+            registration = remoteActors.getFirst(shortPath);
             if(registration != null) return registration.getNamesapce();
         }
         return null;

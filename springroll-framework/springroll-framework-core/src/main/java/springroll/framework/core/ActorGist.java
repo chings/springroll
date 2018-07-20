@@ -16,9 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import static springroll.framework.core.Actors.SECONDLY;
 
 public abstract class ActorGist extends AbstractActor {
     private static Logger log = LoggerFactory.getLogger(ActorGist.class);
@@ -211,7 +210,7 @@ public abstract class ActorGist extends AbstractActor {
     }
 
     public void ask(ActorRef actor, Object message, Consumer<Object> consumer) {
-        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)))
+        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.apply(1, TimeUnit.SECONDS)))
                 .handle((reply, error) -> {
                     consumer.accept(reply != null ? reply : error);
                     return null;
@@ -219,7 +218,7 @@ public abstract class ActorGist extends AbstractActor {
     }
 
     public void ask(ActorSelection actor, Object message, Consumer<Object> consumer) {
-        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.durationToTimeout(SECONDLY)))
+        FutureConverters.toJava(Patterns.ask(actor, message, Timeout.apply(1, TimeUnit.SECONDS)))
                 .handle((reply, error) -> {
                     consumer.accept(reply != null ? reply : error);
                     return null;

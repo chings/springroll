@@ -10,9 +10,8 @@ import reactor.core.publisher.FluxSink;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.connector.protocol.Kick;
-import springroll.framework.core.ActorRegistry;
-import springroll.framework.core.Actors;
 import springroll.framework.core.ActorGist;
+import springroll.framework.core.ActorRegistry;
 import springroll.framework.core.annotation.State;
 import springroll.framework.protocol.JoinMessage;
 import springroll.framework.protocol.UnjoinMessage;
@@ -59,7 +58,7 @@ public class Connection extends ActorGist {
         public void on(Object message, ActorRef from) {
             Frame frame = frameProtocol.marshal(message);
             frame.setMethod(Method.TELL);
-            frame.setUri(Actors.shortPath(from));
+            frame.setUri(ActorRegistry.shortPath(from));
             sink.next(frame);
             postSendOutward(message, from);
         }

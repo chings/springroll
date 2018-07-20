@@ -12,14 +12,13 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import springroll.framework.connector.protocol.Connected;
+import springroll.framework.core.SpringActorSystem;
 import springroll.framework.core.annotation.ActorBean;
 
 import java.rmi.server.UID;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
-
-import static springroll.framework.core.Actors.tell;
 
 public class WebSocketConnector implements WebSocketHandler {
     private static Logger log = LoggerFactory.getLogger(WebSocketConnector.class);
@@ -43,7 +42,7 @@ public class WebSocketConnector implements WebSocketHandler {
         UnicastProcessor<Frame> processor = UnicastProcessor.create();
         FluxSink<Frame> sink = processor.sink();
 
-        tell(connectionMaster, new Connected(new UID().toString(), source, sink));
+        SpringActorSystem.tell(connectionMaster, new Connected(new UID().toString(), source, sink));
         return session.send(processor.map(frameProtocol::serialize).map(session::textMessage));
     }
 
