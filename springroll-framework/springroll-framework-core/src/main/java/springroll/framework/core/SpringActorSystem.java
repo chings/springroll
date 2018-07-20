@@ -26,7 +26,7 @@ public class SpringActorSystem implements Extension {
     }
 
     public String getServingPath(ActorRef actorRef) {
-        return servingRoot + ActorRegistry.shortPath(actorRef);
+        return servingRoot + ActorRegistry.uriPath(actorRef);
     }
 
     public Props props(String beanName) {

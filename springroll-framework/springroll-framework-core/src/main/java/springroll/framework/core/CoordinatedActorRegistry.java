@@ -74,8 +74,8 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
 
     public synchronized void onProvide(String actorPath, String actorClassName) {
-        String shortPath = ActorRegistry.shortPath(actorPath);
-        remoteActors.add(shortPath, new Registration(actorPath, actorClassName));
+        String uriPath = ActorRegistry.uriPath(actorPath);
+        remoteActors.add(uriPath, new Registration(actorPath, actorClassName));
     }
 
     public synchronized void onUnprovide(String actorPath) {
@@ -85,10 +85,10 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     @Override
     public synchronized void register(ActorRef actorRef, Class<? extends Actor> actorClass) {
         String actorPath = actorRef.path().toString();
-        String shortPath = ActorRegistry.shortPath(actorPath);
-        localActors.add(shortPath, new Registration(actorPath, actorClass.getCanonicalName()));
+        String uriPath = ActorRegistry.uriPath(actorPath);
+        localActors.add(uriPath, new Registration(actorPath, actorClass.getCanonicalName()));
         if(coordinator != null)
-            coordinator.provide(springActorSystem.getServingRoot() + shortPath, actorClass.getCanonicalName());
+            coordinator.provide(springActorSystem.getServingRoot() + uriPath, actorClass.getCanonicalName());
     }
 
     @Override
@@ -98,18 +98,18 @@ public class CoordinatedActorRegistry implements ActorRegistry {
     @Override
     public synchronized void unregister(ActorRef ref) {
         String actorPath = ref.path().toString();
-        String shortPath = ActorRegistry.shortPath(actorPath);
+        String uriPath = ActorRegistry.uriPath(actorPath);
         localActors.findAndRemove((key, registration) -> registration.actorPath.equals(actorPath));
-        if(coordinator != null) coordinator.unprovide(springActorSystem.getServingRoot() + shortPath);
+        if(coordinator != null) coordinator.unprovide(springActorSystem.getServingRoot() + uriPath);
     }
 
     @Override
     public synchronized ActorRef resovle(String path) {
-        String shortPath = ActorRegistry.userPath(path);
-        Registration registration = actorElectStrategy.apply(localActors.get(shortPath));
+        String uriPath = ActorRegistry.uriPath(path);
+        Registration registration = actorElectStrategy.apply(localActors.get(uriPath));
         if(registration != null) return registration.getActorRef();
         if(coordinator != null) {
-            registration = actorElectStrategy.apply(remoteActors.get(shortPath));
+            registration = actorElectStrategy.apply(remoteActors.get(uriPath));
             if(registration != null) return registration.getActorRef();
         }
         return null;
@@ -117,13 +117,13 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized List<ActorRef> resolveAll(String path) {
-        String shortPath = ActorRegistry.userPath(path);
+        String uriPath = ActorRegistry.userPath(path);
         List<ActorRef> result = new ArrayList<>();
-        result.addAll(localActors.get(shortPath).stream()
+        result.addAll(localActors.get(uriPath).stream()
                 .map(registration -> registration.getActorRef())
                 .collect(Collectors.toList()));
         if(coordinator != null) {
-            result.addAll(remoteActors.get(shortPath).stream()
+            result.addAll(remoteActors.get(uriPath).stream()
                     .filter(registration -> registration.actorPath.indexOf(springActorSystem.getServingRoot()) == -1)
                     .map(registration -> registration.getActorRef())
                     .collect(Collectors.toList()));
@@ -133,11 +133,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized ActorSelection select(String path) {
-        String shortPath = ActorRegistry.userPath(path);
-        Registration registration = actorElectStrategy.apply(localActors.get(shortPath));
+        String uriPath = ActorRegistry.userPath(path);
+        Registration registration = actorElectStrategy.apply(localActors.get(uriPath));
         if(registration != null) return registration.getActorSelection();
         if(coordinator != null) {
-            registration = actorElectStrategy.apply(remoteActors.get(shortPath));
+            registration = actorElectStrategy.apply(remoteActors.get(uriPath));
             if(registration != null) return registration.getActorSelection();
         }
         return null;
@@ -145,13 +145,13 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public synchronized List<ActorSelection> selectAll(String path) {
-        String shortPath = ActorRegistry.userPath(path);
+        String uriPath = ActorRegistry.userPath(path);
         List<ActorSelection> result = new ArrayList<>();
-        result.addAll(localActors.get(shortPath).stream()
+        result.addAll(localActors.get(uriPath).stream()
                 .map(registration -> registration.getActorSelection())
                 .collect(Collectors.toList()));
         if(coordinator != null) {
-            result.addAll(remoteActors.get(shortPath).stream()
+            result.addAll(remoteActors.get(uriPath).stream()
                     .filter(registration -> registration.actorPath.indexOf(springActorSystem.getServingRoot()) == -1)
                     .map(registration -> registration.getActorSelection())
                     .collect(Collectors.toList()));
@@ -161,11 +161,11 @@ public class CoordinatedActorRegistry implements ActorRegistry {
 
     @Override
     public String askNamespace(String path) {
-        String shortPath = ActorRegistry.userPath(path);
-        Registration registration = localActors.getFirst(shortPath);
+        String uriPath = ActorRegistry.userPath(path);
+        Registration registration = localActors.getFirst(uriPath);
         if(registration != null) return registration.getNamesapce();
         if(coordinator != null) {
-            registration = remoteActors.getFirst(shortPath);
+            registration = remoteActors.getFirst(uriPath);
             if(registration != null) return registration.getNamesapce();
         }
         return null;

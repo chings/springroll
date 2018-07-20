@@ -58,7 +58,7 @@ public class Connection extends ActorGist {
         public void on(Object message, ActorRef from) {
             Frame frame = frameProtocol.marshal(message);
             frame.setMethod(Method.TELL);
-            frame.setUri(ActorRegistry.shortPath(from));
+            frame.setUri(ActorRegistry.uriPath(from));
             sink.next(frame);
             postSendOutward(message, from);
         }
