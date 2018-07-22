@@ -13,10 +13,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -40,8 +37,8 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     CuratorFramework client;
     TreeCache cache;
 
-    Map<String, String> providedActorPaths = new HashMap<>();
-    List<BiConsumer<String, String>> provideListeners = new ArrayList<>();
+    Map<String, String> providedNodes = new HashMap<>();
+    List<BiConsumer<String, Object[]>> provideListeners = new ArrayList<>();
     List<Consumer<String>> unprovideListeners = new ArrayList<>();
 
     @Override
@@ -60,8 +57,8 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
                 case NODE_ADDED:
                 case NODE_UPDATED:
                     String[] tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
-                    for(BiConsumer<String, String> provideListener : provideListeners) {
-                        provideListener.accept(tuple[0], tuple[1]);
+                    for(BiConsumer<String, Object[]> provideListener : provideListeners) {
+                        provideListener.accept(tuple[0], Arrays.copyOfRange(tuple, 1, tuple.length));
                     }
                     break;
                 case NODE_REMOVED:
@@ -92,13 +89,16 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     }
 
     @Override
-    public void provide(String actorPath, String actorClassName) {
+    public void provide(String actorPath, Object... data) {
         try {
-            String data = join(actorPath, actorClassName);
-            String nodePath = client.create()
-                    .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
-                    .forPath(rootPath + "/" + nodeNamePrefix, data.getBytes(DEFAULT_CHARSET));
-            providedActorPaths.put(actorPath, nodePath);
+            byte[] payload = join(actorPath, data).getBytes(DEFAULT_CHARSET);
+            String nodePath = providedNodes.get(actorPath);
+            if(nodePath != null) {
+                client.setData().forPath(nodePath, payload);
+                return;
+            }
+            nodePath = client.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(rootPath + "/" + nodeNamePrefix, payload);
+            providedNodes.put(actorPath, nodePath);
         } catch(Exception x) {
             log.error("Ugh! {}", x.getMessage(), x);
         }
@@ -106,7 +106,7 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     @Override
     public void unprovide(String actorPath) {
-        String nodePath = providedActorPaths.remove(actorPath);
+        String nodePath = providedNodes.remove(actorPath);
         if(StringUtils.isEmpty(nodePath)) return;
         try {
             client.delete().forPath(nodePath);
@@ -117,23 +117,23 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
 
     @Override
     public void unprovide() {
-        for(String nodePath : providedActorPaths.values()) {
+        for(String nodePath : providedNodes.values()) {
             try {
                 client.delete().forPath(nodePath);
             } catch(Exception x) {
                 log.error("Ugh! {}", x.getMessage(), x);
             }
         }
-        providedActorPaths.clear();
+        providedNodes.clear();
     }
 
     @Override
-    public void listenProvide(BiConsumer<String, String> listener) {
+    public void listenProvide(BiConsumer<String, Object[]> listener) {
         provideListeners.add(listener);
     }
 
     @Override
-    public void unlistenProvide(BiConsumer<String, String> listener) {
+    public void unlistenProvide(BiConsumer<String, Object[]> listener) {
         provideListeners.remove(listener);
     }
 
@@ -148,10 +148,11 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
     }
 
     @Override
-    public void synchronize(BiConsumer<String, String> provideListener) {
-        for(ChildData childData : cache.getCurrentChildren(rootPath).values()) {
+    public void synchronize(BiConsumer<String, Object[]> provideListener) {
+        Map<String, ChildData> rootNodes = cache.getCurrentChildren(rootPath);
+        for(ChildData childData : rootNodes.values()) {
             String[] tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
-            provideListener.accept(tuple[0], tuple[1]);
+            provideListener.accept(tuple[0], Arrays.copyOfRange(tuple, 1, tuple.length));
         }
     }
 
@@ -162,10 +163,10 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         client.close();
     }
 
-    static String join(String... data) {
-        StringBuilder result = new StringBuilder();
-        for(String datum : data) {
-            if(result.length() > 0) result.append('\n');
+    static String join(String actorPath, Object... data) {
+        StringBuilder result = new StringBuilder(actorPath);
+        for(Object datum : data) {
+            result.append('\n');
             result.append(datum);
         }
         return result.toString();

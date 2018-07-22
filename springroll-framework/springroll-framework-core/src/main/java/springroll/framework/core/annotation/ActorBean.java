@@ -16,4 +16,6 @@ public @interface ActorBean {
 
     String beanName() default "";
 
+    String namespace() default "";
+
 }

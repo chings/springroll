@@ -54,7 +54,7 @@ public class ActorSystemConfig {
 
     @Bean
     public ActorRegistry actorRegistry() {
-        return new CoordinatedActorRegistry();
+        return new DefaultActorRegistry();
     }
 
     @Bean

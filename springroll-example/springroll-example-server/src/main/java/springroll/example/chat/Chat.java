@@ -4,12 +4,12 @@ import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import springroll.framework.connector.protocol.Disconnected;
-import springroll.framework.core.ActorGist;
+import springroll.framework.core.Actorlet;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Chat extends ActorGist {
+public class Chat extends Actorlet {
     private static Logger log = LoggerFactory.getLogger(Chat.class);
 
     Map<ActorRef, String> chatters = new HashMap<>();

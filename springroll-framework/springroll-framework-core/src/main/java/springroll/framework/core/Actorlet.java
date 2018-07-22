@@ -19,9 +19,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public abstract class ActorGist extends AbstractActor {
-    private static Logger log = LoggerFactory.getLogger(ActorGist.class);
-    private static Map<Class<? extends ActorGist>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
+public abstract class Actorlet extends AbstractActor {
+    private static Logger log = LoggerFactory.getLogger(Actorlet.class);
+    private static Map<Class<? extends Actorlet>, Map<String, Map<Class<?>, Method>>> behaviorsCache = new HashMap<>();
     private static final String INITIIAL = "";
     private static final String ANY = "*";
 
@@ -72,7 +72,7 @@ public abstract class ActorGist extends AbstractActor {
         return result;
     }
 
-    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends ActorGist> actorClass) {
+    private synchronized static Map<String, Map<Class<?>, Method>> analyseBehaviors(Class<? extends Actorlet> actorClass) {
         return behaviorsCache.computeIfAbsent(actorClass, actorClazz -> {
             Map<String, Map<Class<?>, Method>> result = analyseBehaviors(actorClazz, new LinkedHashMap<String, Map<Class<?>, Method>>());
             if(!result.containsKey(INITIIAL)) {

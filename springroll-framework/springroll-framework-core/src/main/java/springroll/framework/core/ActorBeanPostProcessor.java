@@ -64,14 +64,16 @@ public class ActorBeanPostProcessor implements ApplicationContextAware, BeanPost
             } else if(StringUtils.hasText(actorBeanName) && applicationContext.containsBean(actorBeanName)) {
                 //try create from prototype Bean
                 actorRef = springActorSystem.spawn(actorName, actorBeanName);
+                actorClass = (Class<? extends Actor>)applicationContext.getType(actorBeanName);
             }
             if(actorRef == null) {
                 throw new BeanCreationException("failed creating actor bean of " + actorClass.getCanonicalName());
             }
+            String namespace = actorBean.namespace().isEmpty() ? actorClass.getPackage().getName() : actorBean.namespace();
+            actorRegistry.register(actorRef, namespace);
 
             if(!field.isAccessible()) field.setAccessible(true);
             field.set(bean, actorRef);
-            actorRegistry.register(actorRef, actorClass);
         });
         return bean;
     }

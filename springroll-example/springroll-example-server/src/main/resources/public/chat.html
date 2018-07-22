@@ -83,7 +83,7 @@
 
     var chatUri = "/Chat";
     var myScreenName = randomString(5);
-    var connection = new SpringRollConnection("ws://172.18.238.175:8080/roll", function() {
+    var connection = new SpringRollConnection("ws://localhost:8080/roll", function() {
         connection.tell(chatUri, "Join", {
             chatterName: myScreenName
         });

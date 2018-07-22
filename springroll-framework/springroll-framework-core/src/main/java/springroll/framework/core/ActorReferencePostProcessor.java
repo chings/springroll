@@ -26,9 +26,9 @@ public class ActorReferencePostProcessor implements BeanPostProcessor, Ordered {
             if(actorReference == null) return;
             if(!field.getType().isAssignableFrom(ActorSelection.class) && !field.getType().isAssignableFrom(ActorRef.class))
                 throw new NotWritablePropertyException(bean.getClass(), field.getName(), "only ActorSelection/ActorRef can be injected by @ActorReference");
-            String shortPath = ActorRegistry.userPath(actorReference.value());
-            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(shortPath) : actorRegistry.resovle(shortPath);
-            if(value == null) throw new NoSuchBeanDefinitionException(shortPath);
+            String pathOrName = actorReference.value();
+            Object value = field.getType().isAssignableFrom(ActorSelection.class) ? actorRegistry.select(pathOrName) : actorRegistry.resovle(pathOrName);
+            if(value == null) throw new NoSuchBeanDefinitionException(pathOrName);
             if(!field.isAccessible()) field.setAccessible(true);
             field.set(bean, value);
         });

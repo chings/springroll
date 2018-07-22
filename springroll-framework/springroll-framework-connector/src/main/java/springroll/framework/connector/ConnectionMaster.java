@@ -4,13 +4,13 @@ import akka.actor.ActorRef;
 import org.springframework.beans.factory.annotation.Autowired;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
-import springroll.framework.core.ActorGist;
+import springroll.framework.core.Actorlet;
 import springroll.framework.core.SpringActorSystem;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConnectionMaster extends ActorGist {
+public class ConnectionMaster extends Actorlet {
 
     @Autowired
     SpringActorSystem springActorSystem;

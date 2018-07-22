@@ -3,14 +3,14 @@ package springroll.example.chat;
 import akka.actor.ActorRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import springroll.framework.core.ActorGist;
+import springroll.framework.core.Actorlet;
 import springroll.framework.core.annotation.Initial;
 import springroll.framework.core.annotation.State;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Chatter extends ActorGist {
+public class Chatter extends Actorlet {
     private static Logger log = LoggerFactory.getLogger(Chatter.class);
 
     ActorRef chat;

@@ -10,8 +10,8 @@ import reactor.core.publisher.FluxSink;
 import springroll.framework.connector.protocol.Connected;
 import springroll.framework.connector.protocol.Disconnected;
 import springroll.framework.connector.protocol.Kick;
-import springroll.framework.core.ActorGist;
 import springroll.framework.core.ActorRegistry;
+import springroll.framework.core.Actorlet;
 import springroll.framework.core.annotation.State;
 import springroll.framework.protocol.JoinMessage;
 import springroll.framework.protocol.UnjoinMessage;
@@ -22,7 +22,7 @@ import java.util.Set;
 
 import static springroll.framework.connector.Frame.Method;
 
-public class Connection extends ActorGist {
+public class Connection extends Actorlet {
     private static Logger log = LoggerFactory.getLogger(Connection.class);
 
     @Autowired
@@ -58,7 +58,7 @@ public class Connection extends ActorGist {
         public void on(Object message, ActorRef from) {
             Frame frame = frameProtocol.marshal(message);
             frame.setMethod(Method.TELL);
-            frame.setUri(ActorRegistry.uriPath(from));
+            frame.setUri(ActorRegistry.path(from));
             sink.next(frame);
             postSendOutward(message, from);
         }
@@ -76,14 +76,14 @@ public class Connection extends ActorGist {
                 break;
             case TELL:
                 ActorRef to = actorRegistry.resovle(frame.getUri());
-                String namespace = actorRegistry.askNamespace(frame.getUri());
+                String namespace = actorRegistry.namespace(frame.getUri());
                 Object message = frameProtocol.unmarshal(frame, namespace);
                 preSendInward(to, message);
                 tell(to, message);
                 break;
             case ASK:
                 to = actorRegistry.resovle(frame.getUri());
-                namespace = actorRegistry.askNamespace(frame.getUri());
+                namespace = actorRegistry.namespace(frame.getUri());
                 message = frameProtocol.unmarshal(frame, namespace);
                 preSendInward(to, message);
                 ask(to, message, reply -> {

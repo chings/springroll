@@ -1,6 +1,5 @@
 package springroll.framework.core;
 
-import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 
@@ -10,33 +9,33 @@ import java.util.regex.Pattern;
 
 public interface ActorRegistry {
 
-    void register(ActorRef actorRef, Class<? extends Actor> actorClass);
-    void report(ActorRef actorRef, double loadFactor);
+    void register(ActorRef actorRef, String namespace);
+    void update(ActorRef actorRef, double loadFactor);
     void unregister(ActorRef actorRef);
 
-    ActorRef resovle(String path);
-    List<ActorRef> resolveAll(String path);
+    ActorRef resovle(String pathOrName);
+    List<ActorRef> resolveAll(String pathOrName);
 
-    ActorSelection select(String path);
-    List<ActorSelection> selectAll(String path);
+    ActorSelection select(String pathOrName);
+    List<ActorSelection> selectAll(String pathOrName);
 
-    String askNamespace(String path);
+    String namespace(String pathOrName);
 
-    Pattern actorPathPattern = Pattern.compile("akka.*://([^/]+)(/.*)");
+    Pattern ACTOR_PATH_PATTERN = Pattern.compile("akka.*://([^/]+)(/.*)");
 
-    static String uriPath(String path) {
-        Matcher matcher = actorPathPattern.matcher(path);
+    static String path(String actorPath) {
+        Matcher matcher = ACTOR_PATH_PATTERN.matcher(actorPath);
         if(!matcher.matches()) throw new IllegalArgumentException("bad format of ActorPath");
         return matcher.group(2);
     }
 
-    static String uriPath(ActorRef actorRef) {
-        return uriPath(actorRef.path().toString());
+    static String path(ActorRef actorRef) {
+        return path(actorRef.path().toString());
     }
 
-    static String userPath(String path) {
-        if(path.startsWith("/user/")) return path;
-        return path.charAt(0) == '/' ? "/user" + path : "/user/" + path;
+    static String userPath(String pathOrName) {
+        if(pathOrName.startsWith("/user/")) return pathOrName;
+        return pathOrName.charAt(0) == '/' ? "/user" + pathOrName : "/user/" + pathOrName;
     }
 
 }
