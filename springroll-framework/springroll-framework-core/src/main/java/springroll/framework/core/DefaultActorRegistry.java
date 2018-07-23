@@ -102,12 +102,10 @@ public class DefaultActorRegistry implements ActorRegistry {
     @Autowired(required = false)
     public void setCoordinator(Coordinator coordinator) {
         this.coordinator = coordinator;
-
-        coordinator.listenProvide(this::onProvide);
-        coordinator.listenUnprovide(this::onUnprovide);
-
         remoteActors.clear();
         coordinator.synchronize(this::onProvide);
+        coordinator.listenProvide(this::onProvide);
+        coordinator.listenUnprovide(this::onUnprovide);
     }
 
     public void setActorRouter(Function<List<Registration>, Registration> actorRouter) {

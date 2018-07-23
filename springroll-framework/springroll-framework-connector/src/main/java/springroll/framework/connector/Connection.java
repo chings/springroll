@@ -60,7 +60,7 @@ public class Connection extends Actorlet {
             frame.setMethod(Method.TELL);
             frame.setUri(ActorRegistry.path(from));
             sink.next(frame);
-            postSendOutward(message, from);
+            postSendOut(message, from);
         }
 
     }
@@ -78,14 +78,14 @@ public class Connection extends Actorlet {
                 ActorRef to = actorRegistry.resovle(frame.getUri());
                 String namespace = actorRegistry.namespace(frame.getUri());
                 Object message = frameProtocol.unmarshal(frame, namespace);
-                preSendInward(to, message);
+                preSendIn(to, message);
                 tell(to, message);
                 break;
             case ASK:
                 to = actorRegistry.resovle(frame.getUri());
                 namespace = actorRegistry.namespace(frame.getUri());
                 message = frameProtocol.unmarshal(frame, namespace);
-                preSendInward(to, message);
+                preSendIn(to, message);
                 ask(to, message, reply -> {
                     if(reply instanceof Throwable) {
                         Frame errorFrame = new Frame(Method.ERROR);
@@ -98,7 +98,7 @@ public class Connection extends Actorlet {
                         replyFrame.setUri(frame.getUri());
                         replyFrame.setReSerialNo(frame.getSerialNo());
                         sink.next(replyFrame);
-                        postSendOutward(message, to);
+                        postSendOut(message, to);
                     }
                 });
                 break;
@@ -107,7 +107,7 @@ public class Connection extends Actorlet {
         }
     }
 
-    public void preSendInward(ActorRef to, Object message) {
+    public void preSendIn(ActorRef to, Object message) {
         if(message instanceof JoinMessage) {
             joinedActors.add(to);
         } else if(message instanceof UnjoinMessage) {
@@ -115,8 +115,8 @@ public class Connection extends Actorlet {
         }
     }
 
-    public void postSendOutward(Object message, ActorRef from) {
-        preSendInward(from, message);
+    public void postSendOut(Object message, ActorRef from) {
+        preSendIn(from, message);
     }
 
     public void handleError(Throwable x) {

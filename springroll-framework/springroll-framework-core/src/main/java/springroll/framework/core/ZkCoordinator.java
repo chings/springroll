@@ -54,6 +54,9 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
             if(childData == null) return;
             if(!childData.getPath().startsWith(rootPath + "/" + nodeNamePrefix)) return;
             switch(event.getType()) {
+                case INITIALIZED:
+                    cache.notify();
+                    break;
                 case NODE_ADDED:
                 case NODE_UPDATED:
                     String[] tuple = split(new String(childData.getData(), DEFAULT_CHARSET));
@@ -70,6 +73,11 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
             }
         });
         cache.start();
+        synchronized(cache) {
+            while(cache.getCurrentChildren(rootPath) == null) {
+                cache.wait();
+            }
+        }
     }
 
     void ensure(String nodePath) {
