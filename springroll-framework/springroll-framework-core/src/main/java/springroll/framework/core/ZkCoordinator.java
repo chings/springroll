@@ -75,8 +75,10 @@ public class ZkCoordinator implements Coordinator, InitializingBean, DisposableB
         cache.start();
         synchronized(cache) {
             while(cache.getCurrentChildren(rootPath) == null) {
+                log.debug("Waiting TreeCache initialized...");
                 cache.wait();
             }
+            log.debug("TreeCache initialized");
         }
     }
 
